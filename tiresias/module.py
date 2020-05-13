@@ -105,26 +105,30 @@ class Module(nn.Module):
 
         # Loop over each epoch
         for epoch in range(1, epochs+1):
-            # Loop over entire dataset
-            for X_, y_ in data:
-                # Forward pass
-                # Get new input batch
-                X_ = X_.clone().detach().to(device)
-                # Run through module
-                y_pred = self(X_)
-                # Compute loss
-                loss = criterion(y_pred, y_)
+            try:
+                # Loop over entire dataset
+                for X_, y_ in data:
+                    # Forward pass
+                    # Get new input batch
+                    X_ = X_.clone().detach().to(device)
+                    # Run through module
+                    y_pred = self(X_)
+                    # Compute loss
+                    loss = criterion(y_pred, y_)
 
-                # Backward pass
-                # Clear optimizer
-                optimizer.zero_grad()
-                # Propagate loss
-                loss.backward()
-                # Perform optimizer step
-                optimizer.step()
+                    # Backward pass
+                    # Clear optimizer
+                    optimizer.zero_grad()
+                    # Propagate loss
+                    loss.backward()
+                    # Perform optimizer step
+                    optimizer.step()
 
-                # Update progress
-                if verbose: self.progress.update(loss, X_.shape[0])
+                    # Update progress
+                    if verbose: self.progress.update(loss, X_.shape[0])
+            except KeyboardInterrupt:
+                print("\nTraining interrupted, performing clean stop")
+                break
             # New line for each epoch
             if verbose: self.progress.update_epoch()
 
