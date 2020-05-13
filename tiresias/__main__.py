@@ -22,7 +22,7 @@ if __name__ == "__main__":
     group_tiresias = parser.add_argument_group("Tiresias parameters")
     group_tiresias.add_argument('-i', '--input' , default=300, help='input  dimension')
     group_tiresias.add_argument('-l', '--hidden', default=128, help='hidden dimension')
-    group_tiresias.add_argument('-k', '--k'     , default=10 , help='number of concurrent memory cells')
+    group_tiresias.add_argument('-k', '--k'     , default=4  , help='number of concurrent memory cells')
 
     # Parse arguments
     args = parser.parse_args()
