@@ -105,9 +105,6 @@ class Module(nn.Module):
 
         # Loop over each epoch
         for epoch in range(1, epochs+1):
-            # Initialise loss
-            total_loss = 0
-
             # Loop over entire dataset
             for X_, y_ in data:
                 # Forward pass
@@ -125,11 +122,9 @@ class Module(nn.Module):
                 loss.backward()
                 # Perform optimizer step
                 optimizer.step()
-                # Update total loss
-                total_loss += loss
 
                 # Update progress
-                if verbose: self.progress.update(total_loss, X_.shape[0])
+                if verbose: self.progress.update(loss, X_.shape[0])
             # New line for each epoch
             if verbose: self.progress.update_epoch()
 
