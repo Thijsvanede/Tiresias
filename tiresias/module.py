@@ -1,8 +1,10 @@
 import datetime
 import time
+import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
+from variable_data_loader import VariableDataLoader
 
 class Module(nn.Module):
     """Extention of nn.Module that adds fit and predict methods
@@ -26,6 +28,7 @@ class Module(nn.Module):
             learning_rate = 0.01,
             criterion     = nn.NLLLoss,
             optimizer     = optim.SGD,
+            variable      = False,
             verbose       = True,
             **kwargs):
         """Train the module with given parameters
@@ -72,19 +75,29 @@ class Module(nn.Module):
         # Set criterion
         criterion = criterion()
         # Initialise progress
-        self.progress.reset(X.shape[0], epochs)
+        self.progress.reset(len(X), epochs)
 
         ################################################################
         #                         Prepare data                         #
         ################################################################
-        # Get device
-        device = X.device
-        # Load data
-        data = DataLoader(
-            TensorDataset(X, y),
-            batch_size = batch_size,
-            shuffle    = True
-        )
+
+        # If the input length can be variable
+        if variable:
+            # Set device automatically
+            device = 'cuda' if torch.cuda.is_available() else 'cpu'
+            # Load data as variable length dataset
+            data = VariableDataLoader(X, y, batch_size=batch_size, shuffle=True)
+
+        # In the normal case
+        else:
+            # Get device
+            device = X.device
+            # Load data
+            data = DataLoader(
+                TensorDataset(X, y),
+                batch_size = batch_size,
+                shuffle    = True
+            )
 
         ################################################################
         #                       Perform training                       #
@@ -197,7 +210,6 @@ class Module(nn.Module):
                         verbose,
                         **kwargs
             ).predict(X, **kwargs)
-
 
 
 
