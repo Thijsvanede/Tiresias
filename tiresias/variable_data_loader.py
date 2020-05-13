@@ -1,9 +1,10 @@
+import random
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
 class VariableDataLoader(object):
 
-    def __init__(self, X, y, batch_size=1, shuffle=True):
+    def __init__(self, X, y, index=False, batch_size=1, shuffle=True):
         """Load data from variable length inputs
 
         Parameters
@@ -15,6 +16,9 @@ class VariableDataLoader(object):
         y : iterable of shape=(n_samples,)
             Labels corresponding to X
 
+        index : boolean, default=False
+            If True, also returns original index
+
         batch_size : int, default=1
             Size of each batch to output
 
@@ -25,16 +29,23 @@ class VariableDataLoader(object):
         # Get inputs by length
         self.lengths = dict()
         # Loop over inputs
-        for X_, y_ in zip(X, y):
-            X_length, y_length = self.lengths.get(len(X_), (list(), list()))
+        for i, (X_, y_) in enumerate(zip(X, y)):
+            X_length, y_length, i_length = self.lengths.get(len(X_), (list(), list(), list()))
             X_length.append(X_)
             y_length.append(y_)
-            self.lengths[len(X_)] = (X_length, y_length)
+            i_length.append(i)
+            self.lengths[len(X_)] = (X_length, y_length, i_length)
 
         # Transform to tensors
         for k, v in self.lengths.items():
-            self.lengths[k] = (torch.as_tensor(v[0]), torch.as_tensor(v[1]))
+            self.lengths[k] = (
+                torch.as_tensor(v[0]),
+                torch.as_tensor(v[1]),
+                torch.as_tensor(v[2])
+            )
 
+        # Set index
+        self.index = index
         # Set batch_size
         self.batch_size = batch_size
         # Set shuffle
@@ -51,7 +62,7 @@ class VariableDataLoader(object):
         self.done = set()
         # Reset DataLoaders
         self.data = { k: iter(DataLoader(
-            TensorDataset(v[0], v[1]),
+            TensorDataset(v[0], v[1], v[2]),
             batch_size = self.batch_size,
             shuffle    = self.shuffle))
             for k, v in self.lengths.items()
@@ -74,13 +85,17 @@ class VariableDataLoader(object):
 
         # Select key
         if self.shuffle:
-            key = next(iter(self.keys - self.done))
+            key = random.choice(list(self.keys - self.done))
         else:
-            key = next(sorted(self.keys - self.done))
+            key = sorted(self.keys - self.done)[0]
 
         # Yield next item in batch
         try:
-            item = next(self.data.get(key))
+            X_, y_, i = next(self.data.get(key))
+            if self.index:
+                item = (X_, y_, i)
+            else:
+                item = (X_, y_)
         except StopIteration:
             # Add key
             self.done.add(key)

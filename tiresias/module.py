@@ -141,7 +141,7 @@ class Module(nn.Module):
         return self
 
 
-    def predict(self, X, **kwargs):
+    def predict(self, X, variable=False, **kwargs):
         """Makes prediction based on input data X.
             Default implementation just uses the module forward(X) method,
             often the predict method will be overwritten to fit the specific
@@ -152,12 +152,44 @@ class Module(nn.Module):
             X : torch.Tensor
                 Tensor from which to make prediction
 
+            variable : boolean, default=False
+                If True, accept inputs of variable length
+
             Returns
             -------
             result : torch.Tensor
                 Resulting prediction
             """
-        return self(X)
+        # If we expect variable input
+        if variable:
+            # Initialise result
+            result  = list()
+            indices = list()
+
+            # Load data
+            data = VariableDataLoader(X, torch.zeros(len(X)),
+                index=True,
+                batch_size=len(X),
+                shuffle=False
+            )
+
+            # Loop over data
+            for X_, y_, i in data:
+                # Perform prediction and append
+                result .append(self(X_))
+                # Store index
+                indices.append(i)
+
+            # Concatenate inputs
+            result  = torch.cat(result)
+            indices = torch.cat(indices)
+
+            # Return originally indexed result
+            return result[indices]
+
+        # If input is not variable
+        else:
+            return self(X)
 
 
     def fit_predict(self, X, y,
