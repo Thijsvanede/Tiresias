@@ -4,7 +4,7 @@ import torch.nn as nn
 class LSTM(nn.Module):
 
     def __init__(self, input_size, hidden_size):
-        """Regular LSTM implementation
+        """Regular LSTM implementation in pytorch
 
             Parameters
             ----------
@@ -74,7 +74,7 @@ class LSTM(nn.Module):
             # Feed through network
             h_t, c_t = self._forward_single_(x_t, h_t, c_t)
             # Append result
-            result.append(h_t.unsqueeze(0))
+            result.append(h_t)
 
         # Get as array
         result = torch.cat(result).transpose(0, 1).contiguous()
@@ -133,5 +133,5 @@ class LSTM(nn.Module):
 
     def initHidden(self, x):
         """Initialise hidden layer"""
-        return torch.zeros(x.shape[0], self.hidden_size).to(x.device),\
-               torch.zeros(x.shape[0], self.hidden_size).to(x.device)
+        return torch.zeros(1, x.shape[0], self.hidden_size).to(x.device),\
+               torch.zeros(1, x.shape[0], self.hidden_size).to(x.device)
