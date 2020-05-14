@@ -56,6 +56,9 @@ class Module(nn.Module):
             optimizer : optim.Optimizer, default=optim.SGD
                 Optimizer to use for training
 
+            variable : boolean, default=False
+                If True, accept inputs of variable length
+
             verbose : boolean, default=True
                 If True, prints training progress
 
@@ -197,6 +200,7 @@ class Module(nn.Module):
             learning_rate = 0.01,
             criterion     = nn.NLLLoss,
             optimizer     = optim.SGD,
+            variable      = False,
             verbose       = True,
             **kwargs):
         """Train the module with given parameters
@@ -224,6 +228,9 @@ class Module(nn.Module):
             optimizer : optim.Optimizer, default=optim.SGD
                 Optimizer to use for training
 
+            variable : boolean, default=False
+                If True, accept inputs of variable length
+
             verbose : boolean, default=True
                 If True, prints training progress
 
@@ -238,9 +245,10 @@ class Module(nn.Module):
                         learning_rate,
                         criterion,
                         optimizer,
+                        variable,
                         verbose,
                         **kwargs
-            ).predict(X, **kwargs)
+            ).predict(X, variable, **kwargs)
 
 
 
