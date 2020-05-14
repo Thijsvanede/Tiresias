@@ -21,29 +21,13 @@ class LSTM(nn.Module):
         self.input_size  = input_size
         self.hidden_size = hidden_size
 
-        # Set parameters
-        self.W_f = nn.Parameter(torch.Tensor(input_size , hidden_size))
-        self.U_f = nn.Parameter(torch.Tensor(hidden_size, hidden_size))
-        self.b_f = nn.Parameter(torch.Tensor(hidden_size))
-
-        self.W_i = nn.Parameter(torch.Tensor(input_size , hidden_size))
-        self.U_i = nn.Parameter(torch.Tensor(hidden_size, hidden_size))
-        self.b_i = nn.Parameter(torch.Tensor(hidden_size))
-
-        self.W_o = nn.Parameter(torch.Tensor(input_size , hidden_size))
-        self.U_o = nn.Parameter(torch.Tensor(hidden_size, hidden_size))
-        self.b_o = nn.Parameter(torch.Tensor(hidden_size))
-
-        self.W_c_ = nn.Parameter(torch.Tensor(input_size , hidden_size))
-        self.U_c_ = nn.Parameter(torch.Tensor(hidden_size, hidden_size))
-        self.b_c_ = nn.Parameter(torch.Tensor(hidden_size))
+        # Set layers
+        self.i2h = nn.Linear(input_size , 4*hidden_size)
+        self.h2h = nn.Linear(hidden_size, 4*hidden_size)
 
         # Initialise weights
         self.init_weights()
 
-    ########################################################################
-    #                         Pass through network                         #
-    ########################################################################
 
     def forward(self, x, hidden=None):
         """Forward all sequences through the network.
@@ -53,36 +37,30 @@ class LSTM(nn.Module):
             x : torch.Tensor of shape=(batch, seq_len, input_size)
                 Tensor to pass through network
 
-            h_i : torch.Tensor of shape (batch, input_size), default=0 vector
+            hidden : torch.Tensor of shape (batch, input_size), default=0 vector
                 Tensor containing the hidden state
 
-            c_i : torch.Tensor of shape (batch, input_size), default=0 vector
+            state : torch.Tensor of shape (batch, input_size), default=0 vector
                 Tensor containing the cell state
             """
-        # Read shape
-        batch, seq_len, input_size = x.shape
-        # Initialise result
-        result = list()
+        # Initialise hidden state if necessary
+        hidden, state = hidden or self.initHidden(x)
 
-        # Initialise/unpack hidden states
-        h_t, c_t = hidden or self.initHidden(x)
+        # Initialise outputs
+        outputs = list()
 
-        # Iterate over timesteps
-        for t in range(seq_len):
-            # Extract relevant timestep
-            x_t = x[:, t, :]
-            # Feed through network
-            h_t, c_t = self._forward_single_(x_t, h_t, c_t)
-            # Append result
-            result.append(h_t)
-
-        # Get as array
-        result = torch.cat(result).transpose(0, 1).contiguous()
+        # Loop over all timesteps
+        for x_ in torch.unbind(x, dim=1):
+            # Perform a single forward pass
+            hidden, state = self._forward_single_(x_, hidden, state)
+            # Append output
+            outputs.append(hidden[0].clone())
 
         # Return result
-        return result, (h_t, c_t)
+        return torch.stack(outputs, dim=1), (hidden, state)
 
-    def _forward_single_(self, x, h_t, c_t):
+
+    def _forward_single_(self, x, hidden, state):
         """Perform a single forward pass through the network.
 
             Parameters
@@ -90,30 +68,46 @@ class LSTM(nn.Module):
             x : torch.Tensor of shape=(batch, input_size)
                 Tensor to pass through network
 
-            h_i : torch.Tensor of shape (batch, input_size)
+            hidden : torch.Tensor of shape (batch, input_size)
                 Tensor containing the hidden state
 
-            c_i : torch.Tensor of shape (batch, input_size)
+            state : torch.Tensor of shape (batch, input_size)
                 Tensor containing the cell state
 
             Returns
             -------
-            h_i : torch.Tensor of shape (batch, input_size)
+            hidden : torch.Tensor of shape (batch, input_size)
                 Tensor containing the next hidden state
 
-            c_i : torch.Tensor of shape (batch, input_size)
+            state : torch.Tensor of shape (batch, input_size)
                 Tensor containing the next cell state
             """
-        # Pass through network
-        f_t  = torch.sigmoid(x @ self.W_f  + h_t @ self.U_f  + self.b_f )
-        i_t  = torch.sigmoid(x @ self.W_i  + h_t @ self.U_i  + self.b_i )
-        o_t  = torch.sigmoid(x @ self.W_o  + h_t @ self.U_o  + self.b_o )
-        c_t_ = torch.tanh   (x @ self.W_c_ + h_t @ self.U_c_ + self.b_c_)
-        c_t  = f_t * c_t + i_t * c_t_
-        h_t  = o_t * torch.tanh(c_t)
+        # Reshape to work for single cell
+        hidden = hidden.view(hidden.size(1), -1)
+        state  = state .view(state .size(1), -1)
+
+        # Linear mapping
+        linear = self.i2h(x) + self.h2h(hidden)
+
+        # Perform activation functions
+        gates = linear[:, :3*self.hidden_size ].sigmoid()
+        c_t_  = linear[:,  3*self.hidden_size:].tanh()
+
+        # Extract gates
+        f_t = gates[:, :self.hidden_size                   ]
+        i_t = gates[:,  self.hidden_size:2*self.hidden_size]
+        o_t = gates[:, -self.hidden_size:                  ]
+
+        # Update states
+        state  = torch.mul(state, f_t) + torch.mul(i_t, c_t_)
+        hidden = torch.mul(o_t, state.tanh())
+
+        # Reshape to work for single cell
+        hidden = hidden.view(1, hidden.size(0), -1)
+        state  = state .view(1, state .size(0), -1)
 
         # Return result
-        return h_t, c_t
+        return hidden, state
 
     ########################################################################
     #                        Weight initialisation                         #
