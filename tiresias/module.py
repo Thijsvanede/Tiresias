@@ -143,7 +143,7 @@ class Module(nn.Module):
         return self
 
 
-    def predict(self, X, variable=False, **kwargs):
+    def predict(self, X, batch_size=32, variable=False, verbose=True, **kwargs):
         """Makes prediction based on input data X.
             Default implementation just uses the module forward(X) method,
             often the predict method will be overwritten to fit the specific
@@ -162,16 +162,21 @@ class Module(nn.Module):
             result : torch.Tensor
                 Resulting prediction
             """
+        # Initialise result
+        result = list()
+        indices = torch.arange(len(X))
+        # Initialise progress
+        self.progress.reset(len(X), 1)
+
         # If we expect variable input
         if variable:
-            # Initialise result
-            result  = list()
+            # Reset indices
             indices = list()
 
             # Load data
             data = VariableDataLoader(X, torch.zeros(len(X)),
                 index=True,
-                batch_size=len(X),
+                batch_size=batch_size,
                 shuffle=False
             )
 
@@ -181,17 +186,27 @@ class Module(nn.Module):
                 result .append(self(X_))
                 # Store index
                 indices.append(i)
+                # Update progress
+                if verbose: self.progress.update(0, X_.shape[0])
 
             # Concatenate inputs
-            result  = torch.cat(result)
             indices = torch.cat(indices)
-
-            # Return originally indexed result
-            return result[indices]
 
         # If input is not variable
         else:
-            return self(X)
+            # Predict each batch
+            for batch in range(0, X.shape[0], batch_size):
+                # Extract data to predict
+                X_ = X[batch:batch+batch_size]
+                # Add prediction
+                result.append(self(X_))
+                # Update progress
+                if verbose: self.progress.update(0, X_.shape[0])
+
+        # Print finished prediction
+        if verbose: self.progress.update_epoch()
+        # Concatenate result and return
+        return torch.cat(result)[indices]
 
 
     def fit_predict(self, X, y,
@@ -248,7 +263,7 @@ class Module(nn.Module):
                         variable,
                         verbose,
                         **kwargs
-            ).predict(X, variable, **kwargs)
+            ).predict(X, batch_size, variable, verbose, **kwargs)
 
 
 
