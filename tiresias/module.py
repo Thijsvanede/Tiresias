@@ -154,8 +154,14 @@ class Module(nn.Module):
             X : torch.Tensor
                 Tensor from which to make prediction
 
+            batch_size : int, default=32
+                Batch size in which to predict items in X
+
             variable : boolean, default=False
                 If True, accept inputs of variable length
+
+            verbose : boolean, default=True
+                If True, print progress of prediction
 
             Returns
             -------
