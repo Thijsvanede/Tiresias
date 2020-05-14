@@ -18,7 +18,9 @@ class Tiresias(Module):
         self.k           = k
 
         # Initialise layers
-        self.lstm    = nn.LSTM  (size_input , size_hidden, batch_first=True)
+        self.lstm    = nn.LSTM(size_input, size_hidden, batch_first=True)
+        # self.lstm    = LSTM(size_input, size_hidden)
+        # self.lstm    = ArrayLSTM(size_input, size_hidden, k)
         self.linear  = nn.Linear(size_hidden, size_output)
         self.softmax = nn.LogSoftmax(dim=1)
 
@@ -38,37 +40,7 @@ class Tiresias(Module):
 
     def predict(self, X, variable=False):
 
-        result = super().predict(X, variable)
+        result = super().predict(X, variable=variable)
         topv, topi = result.topk(1)
         topi = topi.reshape(-1)
         return topi
-
-if __name__ == "__main__":
-    import torch
-    import numpy as np
-    X = [[1, 2, 3, 4],
-         [1, 2, 3, 4, 5],
-         [1, 2],
-         [1, 2, 3, 4, 5, 6],
-         [6, 2, 3, 4, 5, 6],
-         [6, 2, 3, 4],
-         [6, 2, 3],
-         [6, 2, 3, 4, 5],
-         [6, 2, 3, 4, 5],
-         [2, 2, 3, 4, 5],
-         [5, 2, 3, 4, 5]]
-
-    y = torch.as_tensor([1, 1, 1, 1, 6, 6, 6, 6, 6, 1, 2, 5])
-
-    X_train = X[:int(len(X)*.8) ]
-    y_train = y[:int(len(y)*.8) ]
-    X_test  = X[ int(len(X)*.8):]
-    y_test  = y[ int(len(y)*.8):]
-
-    tiresias = Tiresias(10, 128, 10)
-    tiresias.fit(X_train, y_train, epochs=100, batch_size=1, variable=True)
-    y_pred = tiresias.predict(X_test, variable=True)
-
-    print(y_pred)
-    print(y_test)
-    print(y_pred == y_test)
