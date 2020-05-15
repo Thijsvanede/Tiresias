@@ -1,4 +1,4 @@
-from arrayLSTM import ArrayLSTM, StochasticArrayLSTM
+from arrayLSTM import ArrayLSTM, SoftArrayLSTM, StochasticArrayLSTM
 from lstm import LSTM
 from module import Module
 import torch
@@ -18,9 +18,11 @@ class Tiresias(Module):
         self.k           = k
 
         # Initialise layers
-        self.lstm    = nn.LSTM(size_input, size_hidden, batch_first=True)
+        # self.lstm    = nn.LSTM(size_input, size_hidden, batch_first=True)
         # self.lstm    = LSTM(size_input, size_hidden)
         # self.lstm    = ArrayLSTM(size_input, size_hidden, k)
+        self.lstm    = SoftArrayLSTM(size_input, size_hidden, k)
+        # self.lstm    = StochasticArrayLSTM(size_input, size_hidden, k)
         self.linear  = nn.Linear(size_hidden, size_output)
         self.softmax = nn.LogSoftmax(dim=1)
 
