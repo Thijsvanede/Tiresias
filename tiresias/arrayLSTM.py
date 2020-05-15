@@ -256,7 +256,7 @@ class SoftArrayLSTM(ArrayLSTM):
         # Reshape hidden state to work for single cell
         hidden = hidden.view(hidden.size(1), -1)
         # Initialise outputs
-        outputs = torch.zeros(self.k, x.shape[0], self.hidden_size)
+        outputs = torch.zeros(self.k, x.shape[0], self.hidden_size, device=x.device)
 
         # Compute attention signal
         attention = self.i2a(x).sigmoid()
