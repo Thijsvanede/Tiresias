@@ -95,7 +95,7 @@ class ArrayLSTM(LSTM):
         # Reshape hidden state to work for single cell
         hidden = hidden.view(hidden.size(1), -1)
         # Initialise outputs
-        outputs = torch.zeros(self.k, x.shape[0], self.hidden_size)
+        outputs = torch.zeros(self.k, x.shape[0], self.hidden_size, device=x.device)
 
         # Apply linear mapping
         linear = self.i2h(x) + self.h2h(hidden)
@@ -145,7 +145,7 @@ class ArrayLSTM(LSTM):
                 Hidden tensor as computed from outputs and states
             """
         # Initialise hidden state
-        hidden = torch.zeros(1, outputs.shape[1], self.hidden_size)
+        hidden = torch.zeros(1, outputs.shape[1], self.hidden_size, device=states.device)
 
         # Loop over all outputs
         for output, state in zip(torch.unbind(outputs, dim=0),
