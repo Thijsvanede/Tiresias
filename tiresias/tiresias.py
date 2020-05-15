@@ -73,7 +73,7 @@ class Tiresias(Module):
 
     def forward(self, X):
         # One-hot encode input
-        encoded = F.one_hot(X, self.size_input).to(torch.float32)
+        encoded = F.one_hot(X, self.input_size).to(torch.float32)
 
         # Pass through LSTM layer
         out, (hidden, state) = self.lstm(encoded)
