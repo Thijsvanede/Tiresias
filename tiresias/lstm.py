@@ -25,9 +25,6 @@ class LSTM(nn.Module):
         self.i2h = nn.Linear(input_size , 4*hidden_size)
         self.h2h = nn.Linear(hidden_size, 4*hidden_size)
 
-        # Initialise weights
-        self.init_weights()
-
 
     def forward(self, x, hidden=None):
         """Forward all sequences through the network.
@@ -108,18 +105,6 @@ class LSTM(nn.Module):
 
         # Return result
         return hidden, state
-
-    ########################################################################
-    #                        Weight initialisation                         #
-    ########################################################################
-
-    def init_weights(self):
-        """Initialise weights"""
-        for p in self.parameters():
-            if p.data.ndimension() >= 2:
-                nn.init.xavier_uniform_(p.data)
-            else:
-                nn.init.zeros_(p.data)
 
     ########################################################################
     #                     Hidden state initialisation                      #
