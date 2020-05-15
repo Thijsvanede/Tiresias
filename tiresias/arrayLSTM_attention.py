@@ -39,7 +39,7 @@ class AttentionArrayLSTM(ArrayLSTM):
         """
 
     def __init__(self, input_size, hidden_size, k, max_pooling=False):
-        """Implementation of ArrayLSTM
+        """Implementation of ArrayLSTM with Lane selection: Soft attention
 
             Note
             ----
