@@ -4,10 +4,30 @@ import torch
 import torch.nn as nn
 
 class ArrayLSTM(LSTM):
+    """Implementation of ArrayLSTM as in Recurrent Memory Array Structures
+        by Kamil Rocki (https://arxiv.org/abs/1607.03085).
+
+        Attributes
+        ----------
+        input_size : int
+            Size of input dimension
+
+        hidden_size : int
+            Size of hidden dimension
+
+        k : int
+            Number of parallel memory structures, i.e. cell states to use
+
+        i2h : nn.Linear
+            Linear layer transforming input to hidden state
+
+        h2h : nn.Linear
+            Linear layer updating hidden state to hidden state
+        """
 
     def __init__(self, input_size, hidden_size, k):
         """Implementation of ArrayLSTM as in Recurrent Memory Array Structures
-            by Kamil Rocki https://arxiv.org/abs/1607.03085
+            by Kamil Rocki (https://arxiv.org/abs/1607.03085)
 
             Note
             ----
@@ -124,6 +144,9 @@ class ArrayLSTM(LSTM):
             # Update hidden state
             hidden += torch.mul(output, state.tanh())
 
+        print(hidden.shape)
+        exit()
+
         # Return hiddens tate
         return hidden
 
@@ -139,24 +162,40 @@ class ArrayLSTM(LSTM):
 
 class StochasticArrayLSTM(ArrayLSTM):
 
-    def update_hidden(self, o, c):
-        """Update hidden state based on most likely output of o"""
+    def update_hidden(self, outputs, states):
+        """Update hidden state based on most likely output
+
+            Parameters
+            ----------
+            outputs : torch.Tensor of shape=(k, batch_size, hidden_size)
+                Tensor containing the result of output gates o
+
+            states : torch.Tensor of shape=(k, batch_size, hidden_size)
+                Tensor containing the cell states
+
+            Returns
+            -------
+            hidden : torch.Tensor of shape=(1, batch_size, hidden_size)
+                Hidden tensor as computed from outputs and states
+            """
         # Compute probability
-        probability = nn.functional.softmax(o.sum(dim=2), dim=0)
+        probability = nn.functional.softmax(outputs.sum(dim=2), dim=0)
         # Get top probabilities
         topv, topi = probability.topk(1, dim=0)
         # Remove dimension
         topi = topi.squeeze(0)
 
         # Select most likely items
-        o_i = o[topi, torch.arange(o.shape[1])]
-        c_i = c[topi, torch.arange(c.shape[1])]
+        output_i = outputs[topi, torch.arange(outputs.shape[1])]
+        state_i  = states [topi, torch.arange(states .shape[1])]
 
         # Compute h
-        h = o_i * torch.tanh(c_i)
+        hidden = output_i * torch.tanh(state_i)
+        # View hidden properly
+        hidden = hidden.unsqueeze(0)
 
         # Return result
-        return h
+        return hidden
 
 
 if __name__ == "__main__":

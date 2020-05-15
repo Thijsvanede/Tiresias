@@ -2,9 +2,25 @@ import torch
 import torch.nn as nn
 
 class LSTM(nn.Module):
+    """LSTM implementation in pytorch
+
+        Attributes
+        ----------
+        input_size : int
+            Size of input dimension
+
+        hidden_size : int
+            Size of hidden dimension
+
+        i2h : nn.Linear
+            Linear layer transforming input to hidden state
+
+        h2h : nn.Linear
+            Linear layer updating hidden state to hidden state
+        """
 
     def __init__(self, input_size, hidden_size):
-        """Regular LSTM implementation in pytorch
+        """LSTM implementation in pytorch
 
             Note
             ----
