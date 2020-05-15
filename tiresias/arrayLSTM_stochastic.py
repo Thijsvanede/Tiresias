@@ -57,8 +57,8 @@ class StochasticArrayLSTM(ArrayLSTM):
         probability = probability.max(dim=0).indices
 
         # Initialise output
-        output = torch.zeros(probability.shape)
-        state  = torch.zeros(probability.shape)
+        output = torch.zeros(probability.shape, device=states.device)
+        state  = torch.zeros(probability.shape, device=states.device)
         # Fill output
         for k in range(self.k):
             # Create mask
