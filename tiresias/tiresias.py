@@ -6,24 +6,69 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class Tiresias(Module):
+    """Implementation of Tiresias
 
-    def __init__(self, size_input, size_hidden, size_output, k):
+        From `Tiresias: Predicting security events through deep learning`_ by Shen et al.
+
+        .. _`Tiresias: Predicting security events through deep learning`: https://doi.org/10.1145/3243734.3243811
+
+        Note
+        ----
+        This is a `batch_first=True` implementation, hence the `forward()`
+        method expect inputs of `shape=(batch, seq_len, input_size)`.
+
+        Attributes
+        ----------
+        input_size : int
+            Size of input dimension
+
+        hidden_size : int
+            Size of hidden dimension
+
+        output_size : int
+            Size of output dimension
+
+        k : int
+            Number of parallel memory structures, i.e. cell states to use
+        """
+
+    def __init__(self, input_size, hidden_size, output_size, k, device='cpu'):
+        """Implementation of Tiresias
+
+            Parameters
+            ----------
+            input_size : int
+                Size of input dimension
+
+            hidden_size : int
+                Size of hidden dimension
+
+            output_size : int
+                Size of output dimension
+
+            k : int
+                Number of parallel memory structures, i.e. cell states to use
+
+            device : string, default='cpu'
+                Device to use for prediction
+            """
         # Initialise super
         super().__init__()
 
         # Set dimensions
-        self.size_input  = size_input
-        self.size_hidden = size_hidden
-        self.size_output = size_output
+        self.input_size  = input_size
+        self.hidden_size = hidden_size
+        self.output_size = output_size
         self.k           = k
+        self.device      = device
 
         # Initialise layers
-        self.lstm    = nn.LSTM(size_input, size_hidden, batch_first=True).to('cuda')
+        self.lstm    = nn.LSTM(input_size, hidden_size, batch_first=True).to(device)
         # self.lstm    = LSTM(size_input, size_hidden)
         # self.lstm    = ArrayLSTM(size_input, size_hidden, k)
         # self.lstm    = SoftArrayLSTM(size_input, size_hidden, k)
         # self.lstm    = StochasticArrayLSTM(size_input, size_hidden, k)
-        self.linear  = nn.Linear(size_hidden, size_output)
+        self.linear  = nn.Linear(hidden_size, output_size).to(device)
         self.softmax = nn.LogSoftmax(dim=1)
 
     def forward(self, X):
