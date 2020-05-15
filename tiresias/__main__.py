@@ -69,7 +69,7 @@ if __name__ == "__main__":
     ########################################################################
     #                               Tiresias                               #
     ########################################################################
-    tiresias = Tiresias(args.input, args.hidden, args.input, args.k)
+    tiresias = Tiresias(args.input, args.hidden, args.input, args.k, device=device)
     # Train tiresias
     tiresias.fit(X_train, y_train, epochs=args.epochs, batch_size=args.batch_size)
     # Predict using tiresias
