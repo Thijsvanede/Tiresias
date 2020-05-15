@@ -1,7 +1,8 @@
-from lstm import LSTM
-
+# Import pytorch library
 import torch
 import torch.nn as nn
+# Import pytorch LSTM implementation
+from lstm import LSTM
 
 class ArrayLSTM(LSTM):
     """Implementation of ArrayLSTM as in Recurrent Memory Array Structures
@@ -143,9 +144,6 @@ class ArrayLSTM(LSTM):
                                  torch.unbind(states , dim=0)):
             # Update hidden state
             hidden += torch.mul(output, state.tanh())
-
-        print(hidden.shape)
-        exit()
 
         # Return hiddens tate
         return hidden
