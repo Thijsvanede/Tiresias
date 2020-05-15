@@ -76,4 +76,4 @@ if __name__ == "__main__":
     y_pred = tiresias.predict(X_test)
 
     from sklearn.metrics import classification_report
-    print(classification_report(y_test, y_pred, digits=4))
+    print(classification_report(y_test.cpu(), y_pred.cpu(), digits=4))
