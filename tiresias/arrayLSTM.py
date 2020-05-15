@@ -202,7 +202,7 @@ class SoftArrayLSTM(ArrayLSTM):
             Linear layer updating hidden state to hidden state
         """
 
-    def __init__(self, input_size, hidden_size, k):
+    def __init__(self, input_size, hidden_size, k, max_pooling=False):
         """Implementation of ArrayLSTM
 
             Note
@@ -220,9 +220,15 @@ class SoftArrayLSTM(ArrayLSTM):
 
             k : int
                 Number of parallel memory structures, i.e. cell states to use
+
+            max_pooling : boolean, default=False
+                If True, uses max pooling for attention instead
             """
         # Call super
         super().__init__(input_size, hidden_size, k)
+
+        # Set max_pooling
+        self.max_pooling = max_pooling
 
         # Set attention layer
         self.i2a = nn.Linear(input_size, hidden_size*k)
@@ -264,6 +270,12 @@ class SoftArrayLSTM(ArrayLSTM):
         attention = attention.view(x.shape[0], self.k, -1)
         # Compute softmax s
         softmax = F.softmax(attention, dim=1)
+        # Use max_pooling if necessary
+        if self.max_pooling:
+            # Get maximum
+            softmax = softmax.max(dim=1).values
+            softmax = softmax.unsqueeze_(1)
+            softmax = softmax.expand(-1, self.k, -1)
 
         # Apply linear mapping
         linear = self.i2h(x) + self.h2h(hidden)
@@ -336,7 +348,7 @@ class StochasticArrayLSTM(ArrayLSTM):
         # Compute h
         hidden = output_i * torch.tanh(state_i)
         # View hidden properly
-        hidden = hidden.unsqueeze(0)
+        hidden = hidden.unsqueeze_(0)
 
         # Return result
         return hidden

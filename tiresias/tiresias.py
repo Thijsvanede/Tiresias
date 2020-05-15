@@ -62,7 +62,7 @@ class Tiresias(Module):
         # self.lstm    = nn.LSTM(input_size, hidden_size, batch_first=True)
         # self.lstm    = LSTM(input_size, hidden_size)
         # self.lstm    = ArrayLSTM(input_size, hidden_size, k)
-        self.lstm    = SoftArrayLSTM(input_size, hidden_size, k)
+        self.lstm    = SoftArrayLSTM(input_size, hidden_size, k, max_pooling=True)
         # self.lstm    = StochasticArrayLSTM(input_size, hidden_size, k)
         self.linear  = nn.Linear(hidden_size, output_size)
         self.softmax = nn.LogSoftmax(dim=1)
