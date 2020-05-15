@@ -32,7 +32,7 @@ class Tiresias(Module):
             Number of parallel memory structures, i.e. cell states to use
         """
 
-    def __init__(self, input_size, hidden_size, output_size, k, device='cpu'):
+    def __init__(self, input_size, hidden_size, output_size, k):
         """Implementation of Tiresias
 
             Parameters
@@ -48,9 +48,6 @@ class Tiresias(Module):
 
             k : int
                 Number of parallel memory structures, i.e. cell states to use
-
-            device : string, default='cpu'
-                Device to use for prediction
             """
         # Initialise super
         super().__init__()
@@ -60,15 +57,14 @@ class Tiresias(Module):
         self.hidden_size = hidden_size
         self.output_size = output_size
         self.k           = k
-        self.device      = device
 
         # Initialise layers
-        # self.lstm    = nn.LSTM(input_size, hidden_size, batch_first=True).to(device)
-        # self.lstm    = LSTM(input_size, hidden_size).to(device)
-        self.lstm    = ArrayLSTM(input_size, hidden_size, k).to(device)
+        # self.lstm    = nn.LSTM(input_size, hidden_size, batch_first=True)
+        self.lstm    = LSTM(input_size, hidden_size)
+        # self.lstm    = ArrayLSTM(input_size, hidden_size, k)
         # self.lstm    = SoftArrayLSTM(input_size, hidden_size, k)
         # self.lstm    = StochasticArrayLSTM(input_size, hidden_size, k)
-        self.linear  = nn.Linear(hidden_size, output_size).to(device)
+        self.linear  = nn.Linear(hidden_size, output_size)
         self.softmax = nn.LogSoftmax(dim=1)
 
     def forward(self, X):
