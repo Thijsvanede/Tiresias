@@ -196,15 +196,3 @@ class StochasticArrayLSTM(ArrayLSTM):
 
         # Return result
         return hidden
-
-
-if __name__ == "__main__":
-
-    # alstm = ArrayLSTM(32, 32, 10)
-    alstm = StochasticArrayLSTM(32, 32, 10)
-    # alstm = LSTM(32, 32)
-    x = torch.Tensor(1024, 5, 32)
-    x = nn.init.xavier_uniform_(x)
-
-    y, (h_t, o_t) = alstm(x)
-    print(y.shape, h_t.shape, o_t.shape)
