@@ -54,9 +54,9 @@ if __name__ == "__main__":
 
     # Set device
     if args.device is None or args.device == 'auto':
-        device = args.device
-    else:
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    else:
+        device = args.device
 
     # Create loader for preprocessed data
     loader = PreprocessLoader()
