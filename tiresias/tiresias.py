@@ -73,17 +73,25 @@ class Tiresias(Module):
 
     def forward(self, X):
         # One-hot encode input
+        print(X.device)
         encoded = F.one_hot(X, self.input_size).to(torch.float32)
+        print(encoded.device)
 
         # Pass through LSTM layer
         out, (hidden, state) = self.lstm(encoded)
+        print(out.device, hidden.device, state.device)
         # Take hidden state as output
         hidden = hidden.squeeze(0)
+        print(hidden.device)
 
         # Pass through linear layer
         out = self.linear(hidden)
+        print(out.device)
         # Perform softmax and return
-        return self.softmax(out)
+        result = self.softmax(out)
+        print(result.device)
+        exit()
+        return result
 
     def predict(self, X, variable=False):
 
