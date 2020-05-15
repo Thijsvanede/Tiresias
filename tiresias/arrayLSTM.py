@@ -6,7 +6,25 @@ import torch.nn as nn
 class ArrayLSTM(LSTM):
 
     def __init__(self, input_size, hidden_size, k):
-        """Implementation of ArrayLSTM """
+        """Implementation of ArrayLSTM as in Recurrent Memory Array Structures
+            by Kamil Rocki https://arxiv.org/abs/1607.03085
+
+            Note
+            ----
+            This is a `batch_first=True` implementation, hence the `forward()`
+            method expect inputs of `shape=(batch, seq_len, input_size)`.
+
+            Parameters
+            ----------
+            input_size : int
+                Size of input dimension
+
+            hidden_size : int
+                Size of hidden dimension
+
+            k : int
+                Number of parallel memory structures, i.e. cell states to use
+            """
         # Call super
         super().__init__(input_size, hidden_size)
 
