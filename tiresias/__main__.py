@@ -40,17 +40,6 @@ if __name__ == "__main__":
     ########################################################################
     #                              Load data                               #
     ########################################################################
-    # # Initialse preprocessor
-    # preprocessor = Preprocessor()
-    # # Load data
-    # D = preprocessor.load(args.file, max=args.max, min_seq_length=20)
-    #
-    # # TODO proper split
-    # X_train = [x[:-1] for x in D.values()]
-    # y_train = [x[ -1] for x in D.values()]
-    # X_test  = [x[:-1] for x in D.values()]
-    # import torch
-    # y_test  = torch.as_tensor([x[ -1] for x in D.values()])
 
     # Set device
     if args.device is None or args.device == 'auto':
