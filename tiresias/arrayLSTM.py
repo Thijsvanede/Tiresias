@@ -15,31 +15,15 @@ class ArrayLSTM(LSTM):
         self.hidden_size = hidden_size
         self.k           = k
 
-        # Set parameters
-        self.W_f = nn.Parameter(torch.Tensor(k, input_size , hidden_size))
-        self.U_f = nn.Parameter(torch.Tensor(k, hidden_size, hidden_size))
-        self.b_f = nn.Parameter(torch.Tensor(k, hidden_size))
-
-        self.W_i = nn.Parameter(torch.Tensor(k, input_size , hidden_size))
-        self.U_i = nn.Parameter(torch.Tensor(k, hidden_size, hidden_size))
-        self.b_i = nn.Parameter(torch.Tensor(k, hidden_size))
-
-        self.W_o = nn.Parameter(torch.Tensor(k, input_size , hidden_size))
-        self.U_o = nn.Parameter(torch.Tensor(k, hidden_size, hidden_size))
-        self.b_o = nn.Parameter(torch.Tensor(k, hidden_size))
-
-        self.W_c_ = nn.Parameter(torch.Tensor(k, input_size , hidden_size))
-        self.U_c_ = nn.Parameter(torch.Tensor(k, hidden_size, hidden_size))
-        self.b_c_ = nn.Parameter(torch.Tensor(k, hidden_size))
-
-        # Initialise weights
-        self.init_weights()
+        # Set layers
+        self.i2h = nn.Linear(input_size , 4*hidden_size*k)
+        self.h2h = nn.Linear(hidden_size, 4*hidden_size*k)
 
     ########################################################################
     #                         Pass through network                         #
     ########################################################################
 
-    def _forward_single_(self, x, h_t, c_t):
+    def _forward_single_(self, x, hidden, state):
         """Perform a single forward pass through the network.
 
             Parameters
@@ -47,58 +31,83 @@ class ArrayLSTM(LSTM):
             x : torch.Tensor of shape=(batch, input_size)
                 Tensor to pass through network
 
-            h_i : torch.Tensor of shape (batch, input_size)
+            hidden : torch.Tensor of shape (batch, input_size)
                 Tensor containing the hidden state
 
-            c_i : torch.Tensor of shape (batch, input_size)
+            state : torch.Tensor of shape (batch, input_size)
                 Tensor containing the cell state
 
             Returns
             -------
-            h_i : torch.Tensor of shape (batch, input_size)
+            hidden : torch.Tensor of shape (batch, input_size)
                 Tensor containing the next hidden state
 
-            c_i : torch.Tensor of shape (k, batch, input_size)
+            state : torch.Tensor of shape (batch, input_size)
                 Tensor containing the next cell state
             """
-        # Initialise result
-        o = torch.Tensor(self.k, *x.shape)
-        c = torch.Tensor(self.k, *x.shape)
+        # Reshape hidden state to work for single cell
+        hidden = hidden.view(hidden.size(1), -1)
+        # Initialise outputs
+        outputs = torch.zeros(self.k, x.shape[0], self.hidden_size)
 
-        # Pass through network
-        for k in range(self.k):
-            f_t_k   = torch.sigmoid(x @ self.W_f [k] + h_t @ self.U_f [k] + self.b_f [k])
-            i_t_k   = torch.sigmoid(x @ self.W_i [k] + h_t @ self.U_i [k] + self.b_i [k])
-            o_t_k   = torch.sigmoid(x @ self.W_o [k] + h_t @ self.U_o [k] + self.b_o [k])
-            c_t_k_  = torch.tanh   (x @ self.W_c_[k] + h_t @ self.U_c_[k] + self.b_c_[k])
-            c_t[k]  = f_t_k * c_t[k] + i_t_k * c_t_k_
+        # Apply linear mapping
+        linear = self.i2h(x) + self.h2h(hidden)
+        # View linear in terms of k
+        linear = linear.view(x.shape[0], self.k, -1)
 
-            # Update variables
-            o[k] =o_t_k
-            c[k] =c_t[k]
+        # Loop over all k
+        for k, linear_ in enumerate(torch.unbind(linear, dim=1)):
+            # Perform activation functions
+            gates = linear_[:, :3*self.hidden_size ].sigmoid()
+            c_t   = linear_[:,  3*self.hidden_size:].tanh()
 
-        # Update h
-        h_t = self.update_h(o, c)
+            # Extract gates
+            f_t = gates[:, :self.hidden_size                   ]
+            i_t = gates[:,  self.hidden_size:2*self.hidden_size]
+            o_t = gates[:, -self.hidden_size:                  ]
+
+            # Update state
+            state[k] = torch.mul(state[k].clone(), f_t) + torch.mul(i_t, c_t)
+            # Update outputs
+            outputs[k] = o_t
+
+        # Update hidden state
+        hidden = self.update_hidden(outputs, state)
 
         # Return result
-        return h_t, c_t
+        return hidden, state
 
     ########################################################################
     #                         Update hidden state                          #
     ########################################################################
 
-    def update_h(self, o, c):
-        """Default hidden state as sum of o_k and c_k"""
-        # Initialise h
-        h = torch.zeros(o[0].shape)
+    def update_hidden(self, outputs, states):
+        """Default hidden state as sum of outputs and cells
+
+            Parameters
+            ----------
+            outputs : torch.Tensor of shape=(k, batch_size, hidden_size)
+                Tensor containing the result of output gates o
+
+            states : torch.Tensor of shape=(k, batch_size, hidden_size)
+                Tensor containing the cell states
+
+            Returns
+            -------
+            hidden : torch.Tensor of shape=(1, batch_size, hidden_size)
+                Hidden tensor as computed from outputs and states
+            """
+        # Initialise hidden state
+        hidden = torch.zeros(1, outputs.shape[1], self.hidden_size)
 
         # Loop over all outputs
-        for k in range(self.k):
-            # Increment h
-            h += o[k] * torch.tanh(c[k])
+        for output, state in zip(torch.unbind(outputs, dim=0),
+                                 torch.unbind(states , dim=0)):
+            # Update hidden state
+            hidden += torch.mul(output, state.tanh())
 
-        # Return result
-        return h
+        # Return hiddens tate
+        return hidden
 
     ########################################################################
     #                     Hidden state initialisation                      #
@@ -106,13 +115,13 @@ class ArrayLSTM(LSTM):
 
     def initHidden(self, x):
         """Initialise hidden layer"""
-        return torch.zeros(        x.shape[0], self.hidden_size).to(x.device),\
+        return torch.zeros(     1, x.shape[0], self.hidden_size).to(x.device),\
                torch.zeros(self.k, x.shape[0], self.hidden_size).to(x.device)
 
 
 class StochasticArrayLSTM(ArrayLSTM):
 
-    def update_h(self, o, c):
+    def update_hidden(self, o, c):
         """Update hidden state based on most likely output of o"""
         # Compute probability
         probability = nn.functional.softmax(o.sum(dim=2), dim=0)
