@@ -30,8 +30,9 @@ if __name__ == "__main__":
     # Training
     group_training = parser.add_argument_group("Training parameters")
     group_training.add_argument('-b', '--batch-size', type=int, default=128, help="batch size")
-    group_training.add_argument('-e', '--epochs'    , type=int, default=10, help="number of epochs to train with")
-    group_training.add_argument('-r', '--random'    , action='store_true',  help="train with random selection")
+    group_training.add_argument('-e', '--epochs'    , type=int, default=10,  help="number of epochs to train with")
+    group_training.add_argument('-r', '--random'    , action='store_true',   help="train with random selection")
+    group_training.add_argument('-d', '--device'    , default='auto'     ,   help="train using given device (cpu|cuda|auto)")
 
     # Parse arguments
     args = parser.parse_args()
@@ -52,7 +53,10 @@ if __name__ == "__main__":
     # y_test  = torch.as_tensor([x[ -1] for x in D.values()])
 
     # Set device
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    if args.device is None or args.device == 'auto':
+        device = args.device
+    else:
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # Create loader for preprocessed data
     loader = PreprocessLoader()
