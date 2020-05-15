@@ -64,7 +64,7 @@ class Tiresias(Module):
 
         # Initialise layers
         # self.lstm    = nn.LSTM(input_size, hidden_size, batch_first=True).to(device)
-        self.lstm    = LSTM(input_size, hidden_size)
+        self.lstm    = LSTM(input_size, hidden_size).to(device)
         # self.lstm    = ArrayLSTM(input_size, hidden_size, k)
         # self.lstm    = SoftArrayLSTM(input_size, hidden_size, k)
         # self.lstm    = StochasticArrayLSTM(input_size, hidden_size, k)
