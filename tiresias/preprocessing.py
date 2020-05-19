@@ -5,47 +5,6 @@ import numpy as np
 import torch
 from collections import deque
 
-class Preprocessor():
-    """Preprocessor class for loading items"""
-
-    def __init__(self):
-        """Initialise preprocessor"""
-        # Create loader instance
-        self.loader = Loader()
-
-    def load(self, infile, max=float('inf'), min_seq_length=1, decode=False):
-        """Load data from given input file
-
-            Parameters
-            ----------
-            infile : string
-                Path to input file from which to load data
-
-            max : float, default='inf'
-                Maximum number of events to load from input file
-
-            min_seq_length : int, default=1
-                Minimum length of sequences to return
-
-            decode : boolean, default=False
-                If True, it decodes data from input file
-            """
-        # Initialise result
-        result = dict()
-
-        # Load items
-        for data in self.loader.load(infile, max, decode):
-            # Get key
-            key = (data.get('source'), data.get('src_ip'))
-            # Append data
-            result_ = result.get(key, [])
-            result_.append(data.get('threat_name'))
-            result[key] = result_
-
-        # Return result
-        return {k:v for k, v in result.items() if len(v) >= min_seq_length}
-
-
 class PreprocessLoader(object):
 
     def __init__(self):
@@ -100,7 +59,7 @@ class PreprocessLoader(object):
         return data, encodings
 
     def load_sequences(self, infile, dim_in, dim_out=1, max=float('inf'),
-        extract=['threat_name', 'operation', '_id', 'severity', 'confidence']):
+        group = lambda x: (x.get('source'), x.get('src_ip')), extract=[]):
         """Load sequences from input file
 
             Parameters
@@ -117,7 +76,11 @@ class PreprocessLoader(object):
             max : float, default=inf
                 Maximum number of items to extract
 
-            extract : list
+            group : func, default=lambda x: (x.get('source'), x.get('src_ip'))
+                Group input by this input key, default is 'source' and 'src_ip'
+                tuple.
+
+            extract : list, default=[]
                 Fields to extract
 
             Returns
@@ -138,8 +101,8 @@ class PreprocessLoader(object):
 
         # Read sequences from data
         for host, datapoint in self.filter.ngrams(data, dim_in+dim_out,
-            group=lambda x:      (x.get('source'), x.get('src_ip')),
-            key  =lambda x: tuple(x.get(item) for item in extract)):
+            group = group,
+            key   = lambda x: tuple(x.get(item) for item in extract)):
 
             # Unpack data
             datapoint = {k: v for k, v in zip(extract, zip(*datapoint))}
@@ -318,77 +281,6 @@ class Filter(object):
             # Store buffer
             result[k] = buffer
 
-    def signatures(self, data):
-        """Generate signatures for each host in data
-
-            Parameters
-            ----------
-            data : dict()
-                Dictionary of host -> sequence
-
-            Returns
-            -------
-            signatures : dict()
-                Dictionary of host -> signature
-            """
-        # Initialise signatures
-        signatures = dict()
-
-        # Loop over each host to generate a signature
-        for host, sequence in data.items():
-            # Generate signature
-            signature = "Variable"
-            # Set signature
-            if len(sequence) == 1:
-                signature = "Single           {}".format(sequence[0])
-            elif len(set(sequence)) == 1:
-                signature = "Single repeating {}".format(sequence[0])
-
-            # Set signature
-            signatures[host] = signature
-
-        # Return signatures
-        return signatures
-
-    def variable_ngrams(self, data, n, group, key=lambda x: x):
-        """Return n-grams in data of length n only for non-trivial hosts
-
-            Parameters
-            ----------
-            data : data : iterable
-                Iterable to aggregate
-
-            n : int
-                Length of n-gram
-
-            group : func
-                Function by which to split data
-
-            key : func
-                Function by which to aggregate data
-
-            Yields
-            -------
-            host : tuple
-                Host identifier
-
-            sequence : list of length n
-                List containing datapoints of n-gram
-            """
-        # Aggregate data
-        data = list(data)
-        data_ = self.aggregate(data, group=group, key=key)
-        # Generate signatures
-        signatures = self.signatures(data_)
-        # Extract only the hosts for which the signature is variable
-        hosts = {k for k, v in signatures.items() if "Variable" in v}
-
-        # Extract n-grams
-        for host, sequence in self.ngrams(data, n, group=group, key=key):
-            # Check if host in variable hosts
-            if host in hosts:
-                yield host, sequence
-
 
 
 ################################################################################
@@ -445,51 +337,3 @@ class Loader(object):
                         except ValueError:
                             result[k] = v
                     yield result
-
-
-
-################################################################################
-#                       Object for loading ndjson files                        #
-################################################################################
-class NdJsonLoader(object):
-    """Loader for quickly loading data from ndjson files"""
-
-    def __init__(self):
-        """Data loader for quickly loading data from ndjson files"""
-        pass
-
-    def ndjson(self, file, max=float('inf'), field=None):
-        """Load ndjson file
-
-            Parameters
-            ----------
-            file : string
-                File from which to read
-
-            max : float, default=float('inf')
-                Maximum number of items to read
-
-            field : string, optional
-                If given, only return given field
-            """
-        with open(file) as file:
-            for i, line in enumerate(file):
-                if i >= max: break
-                data = json.loads(line)
-                yield data.get(field, data)
-
-    def ndjson_write(self, file, data):
-        """Write ndjson file
-
-            Parameters
-            ----------
-            file : string
-                File to write data to
-
-            data : iterable
-                Iterable to write
-            """
-        with open(file, 'w') as file:
-            for d in data:
-                d = json.dumps(d)
-                file.write(d+'\n')
