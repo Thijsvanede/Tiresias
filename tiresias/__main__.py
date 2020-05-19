@@ -1,6 +1,6 @@
 import argparse
 import torch
-from preprocessing import Preprocessor, PreprocessLoader
+from preprocessing import PreprocessLoader
 from tiresias import Tiresias
 from utils import TextHelpFormatter
 
