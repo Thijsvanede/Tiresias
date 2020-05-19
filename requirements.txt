@@ -1,0 +1,4 @@
+array-lstm==0.0.1
+numpy==1.18.1
+torch==1.4.0
+scikit_learn==0.23.1
