@@ -3,18 +3,12 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 
 class VariableDataLoader(object):
+    """Load data from variable length inputs
 
-    def __init__(self, X, y, index=False, batch_size=1, shuffle=True):
-        """Load data from variable length inputs
-
-        Parameters
+        Attributes
         ----------
-        X : iterable of shape=(n_samples,)
-            Input sequences
-            Each item in iterable should be a sequence (of variable length)
-
-        y : iterable of shape=(n_samples,)
-            Labels corresponding to X
+        lengths : dict()
+            Dictionary of input-length -> input samples
 
         index : boolean, default=False
             If True, also returns original index
@@ -26,6 +20,29 @@ class VariableDataLoader(object):
             If True, shuffle the data randomly, each yielded batch contains
             only input items of the same length
         """
+
+    def __init__(self, X, y, index=False, batch_size=1, shuffle=True):
+        """Load data from variable length inputs
+
+            Parameters
+            ----------
+            X : iterable of shape=(n_samples,)
+                Input sequences
+                Each item in iterable should be a sequence (of variable length)
+
+            y : iterable of shape=(n_samples,)
+                Labels corresponding to X
+
+            index : boolean, default=False
+                If True, also returns original index
+
+            batch_size : int, default=1
+                Size of each batch to output
+
+            shuffle : boolean, default=True
+                If True, shuffle the data randomly, each yielded batch contains
+                only input items of the same length
+            """
         # Get inputs by length
         self.lengths = dict()
         # Loop over inputs
