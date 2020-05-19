@@ -17,6 +17,7 @@ class Module(nn.Module):
     """
 
     def __init__(self, *args, **kwargs):
+        """Only calls super method nn.Module with given arguments."""
         # Initialise super
         super().__init__(*args, **kwargs)
         # Keep progress
