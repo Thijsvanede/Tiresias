@@ -60,10 +60,10 @@ if __name__ == "__main__":
                             random=args.random)
 
     # Get short handles
-    X_train = data.get('threat_name').get('train').get('X').to(device)
-    y_train = data.get('threat_name').get('train').get('y').to(device).reshape(-1)
-    X_test  = data.get('threat_name').get('test' ).get('X').to(device)
-    y_test  = data.get('threat_name').get('test' ).get('y').to(device).reshape(-1)
+    X_train = data.get(args.field).get('train').get('X').to(device)
+    y_train = data.get(args.field).get('train').get('y').to(device).reshape(-1)
+    X_test  = data.get(args.field).get('test' ).get('X').to(device)
+    y_test  = data.get(args.field).get('test' ).get('y').to(device).reshape(-1)
 
     ########################################################################
     #                               Tiresias                               #
