@@ -281,7 +281,7 @@ class Filter(object):
 
 
 ################################################################################
-#                       Object for loading ndjson files                        #
+#                         Object for loading csv files                         #
 ################################################################################
 class Loader(object):
     """Loader for data from preprocessed files"""
