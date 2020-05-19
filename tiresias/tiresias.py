@@ -1,7 +1,7 @@
-from arrayLSTM import ArrayLSTM
-from arrayLSTM_attention import AttentionArrayLSTM
-from arrayLSTM_stochastic import StochasticArrayLSTM
-from lstm import LSTM
+from arrayLSTM            import      LSTM
+from arrayLSTM            import ArrayLSTM
+from arrayLSTM.extensions import  AttentionArrayLSTM
+from arrayLSTM.extensions import StochasticArrayLSTM
 from module import Module
 import torch
 import torch.nn as nn
