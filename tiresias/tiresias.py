@@ -6,6 +6,7 @@ from module import Module
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.optim as optim
 
 class Tiresias(Module):
     """Implementation of Tiresias
@@ -93,7 +94,7 @@ class Tiresias(Module):
         # Perform softmax and return
         return self.softmax(out)
 
-    def predict(self, X, k=1, variable=False):
+    def predict(self, X, k=1, variable=False, verbose=True):
         """Predict the k most likely output values
 
             Parameters
@@ -108,6 +109,9 @@ class Tiresias(Module):
             variable : boolean, default=False
                 If True, predict inputs of different sequence lengths
 
+            verbose : boolean, default=True
+                If True, print output
+
             Returns
             -------
             result : torch.Tensor of shape=(n_samples, k)
@@ -117,10 +121,113 @@ class Tiresias(Module):
                 Confidence levels for each output
             """
         # Get the predictions
-        result = super().predict(X, variable=variable)
+        result = super().predict(X, variable=variable, verbose=verbose)
         # Get the probabilities from the log probabilities
         result = result.exp()
         # Compute k most likely outputs
         confidence, result = result.topk(k)
+        # Return result
+        return result, confidence
+
+
+    def predict_online(self, X, y,
+        k             = 1,
+        epochs        = 10,
+        batch_size    = 32,
+        learning_rate = 0.0001,
+        criterion     = nn.NLLLoss,
+        optimizer     = optim.SGD,
+        variable      = False,
+        verbose       = True,
+        **kwargs):
+        """Predict samples in X and update the network only if the prediction
+            does not match y
+
+            Parameters
+            ----------
+            X : torch.Tensor
+                Tensor to predict/train with
+
+            y : torch.Tensor
+                Target tensor
+
+            k : int, default=1
+                Number of output items to generate
+
+            epochs : int, default=10
+                Number of epochs to train with
+
+            batch_size : int, default=32
+                Default batch size to use for training
+
+            learning_rate : float, default=0.01
+                Learning rate to use for optimizer
+
+            criterion : nn.Loss, default=nn.NLLLoss
+                Loss function to use
+
+            optimizer : optim.Optimizer, default=optim.SGD
+                Optimizer to use for training
+
+            variable : boolean, default=False
+                If True, accept inputs of variable length
+
+            verbose : boolean, default=True
+                If True, prints training progress
+
+            Returns
+            -------
+            result : torch.Tensor of shape=(n_samples, k)
+                k most likely outputs
+
+            confidence : torch.Tensor of shape=(n_samples, k)
+                Confidence levels for each output
+            """
+        # Initialise output
+        result     = list()
+        confidence = list()
+        # Initialise progress
+        self.progress.reset(len(X), 1)
+
+        # Loop over each batch
+        for batch in range(0, len(X), batch_size):
+            # Extract batch
+            X_ = X[batch:batch+batch_size]
+            y_ = y[batch:batch+batch_size]
+
+            # Get prediction
+            y_pred_, confidence_ = self.predict(X_, k,
+                variable=variable, verbose=False)
+
+            # Add prediction
+            result    .append(y_pred_    )
+            confidence.append(confidence_)
+
+            # Check if prediction matches output
+            match = y_pred_[:, 0] == y_
+            for i in range(1, k):
+                match |= y_pred_[:, i] == y_
+
+            # Update non-matching output if any
+            if match.sum() != match.shape[0]:
+                self.fit(X_[~match], y_[~match],
+                    epochs        = epochs,
+                    batch_size    = batch_size,
+                    learning_rate = learning_rate,
+                    criterion     = criterion,
+                    optimizer     = optimizer,
+                    variable      = variable,
+                    verbose       = False,
+                    **kwargs)
+
+            # Update progress
+            if verbose: self.progress.update(0, X_.shape[0])
+
+        # Print finished prediction
+        if verbose: self.progress.update_epoch()
+
+        # Concatenate outputs and return
+        result     = torch.cat(result    , dim=0)
+        confidence = torch.cat(confidence, dim=0)
         # Return result
         return result, confidence

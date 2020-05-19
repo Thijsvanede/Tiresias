@@ -67,7 +67,7 @@ if __name__ == "__main__":
     # Train tiresias
     tiresias.fit(X_train, y_train, epochs=args.epochs, batch_size=args.batch_size)
     # Predict using tiresias
-    y_pred, confidence = tiresias.predict(X_test, k=args.top)
+    y_pred, confidence = tiresias.predict_online(X_test, y_test, k=args.top)
 
     ########################################################################
     #                           Show predictions                           #
