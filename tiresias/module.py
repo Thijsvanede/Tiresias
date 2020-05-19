@@ -168,51 +168,53 @@ class Module(nn.Module):
             result : torch.Tensor
                 Resulting prediction
             """
-        # Initialise result
-        result = list()
-        indices = torch.arange(len(X))
-        # Initialise progress
-        self.progress.reset(len(X), 1)
+        # Do not perform gradient descent
+        with torch.no_grad():
+            # Initialise result
+            result = list()
+            indices = torch.arange(len(X))
+            # Initialise progress
+            self.progress.reset(len(X), 1)
 
-        # If we expect variable input
-        if variable:
-            # Reset indices
-            indices = list()
+            # If we expect variable input
+            if variable:
+                # Reset indices
+                indices = list()
 
-            # Load data
-            data = VariableDataLoader(X, torch.zeros(len(X)),
-                index=True,
-                batch_size=batch_size,
-                shuffle=False
-            )
+                # Load data
+                data = VariableDataLoader(X, torch.zeros(len(X)),
+                    index=True,
+                    batch_size=batch_size,
+                    shuffle=False
+                )
 
-            # Loop over data
-            for X_, y_, i in data:
-                # Perform prediction and append
-                result .append(self(X_))
-                # Store index
-                indices.append(i)
-                # Update progress
-                if verbose: self.progress.update(0, X_.shape[0])
+                # Loop over data
+                for X_, y_, i in data:
+                    # Perform prediction and append
+                    result .append(self(X_))
+                    # Store index
+                    indices.append(i)
+                    # Update progress
+                    if verbose: self.progress.update(0, X_.shape[0])
 
-            # Concatenate inputs
-            indices = torch.cat(indices)
+                # Concatenate inputs
+                indices = torch.cat(indices)
 
-        # If input is not variable
-        else:
-            # Predict each batch
-            for batch in range(0, X.shape[0], batch_size):
-                # Extract data to predict
-                X_ = X[batch:batch+batch_size]
-                # Add prediction
-                result.append(self(X_))
-                # Update progress
-                if verbose: self.progress.update(0, X_.shape[0])
+            # If input is not variable
+            else:
+                # Predict each batch
+                for batch in range(0, X.shape[0], batch_size):
+                    # Extract data to predict
+                    X_ = X[batch:batch+batch_size]
+                    # Add prediction
+                    result.append(self(X_))
+                    # Update progress
+                    if verbose: self.progress.update(0, X_.shape[0])
 
-        # Print finished prediction
-        if verbose: self.progress.update_epoch()
-        # Concatenate result and return
-        return torch.cat(result)[indices]
+            # Print finished prediction
+            if verbose: self.progress.update_epoch()
+            # Concatenate result and return
+            return torch.cat(result)[indices]
 
 
     def fit_predict(self, X, y,
