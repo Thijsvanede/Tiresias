@@ -61,15 +61,25 @@ class Tiresias(Module):
         self.k           = k
 
         # Initialise layers
-        # self.lstm    = nn.LSTM(input_size, hidden_size, batch_first=True)
-        # self.lstm    = LSTM(input_size, hidden_size)
         # self.lstm    = ArrayLSTM(input_size, hidden_size, k)
-        # self.lstm    = AttentionArrayLSTM(input_size, hidden_size, k)
         self.lstm    = StochasticArrayLSTM(input_size, hidden_size, k)
         self.linear  = nn.Linear(hidden_size, output_size)
         self.softmax = nn.LogSoftmax(dim=1)
 
     def forward(self, X):
+        """Forward data through the network
+
+            Parameters
+            ----------
+            X : torch.Tensor of shape=(n_samples, seq_len)
+                Input of sequences, these will be one-hot encoded to an array of
+                shape=(n_samples, seq_len, input_size)
+
+            Returns
+            -------
+            result : torch.Tensor of shape=(n_samples, size_out)
+                Returns a probability distribution of the possible outputs
+            """
         # One-hot encode input
         encoded = F.one_hot(X, self.input_size).to(torch.float32)
 
@@ -83,9 +93,34 @@ class Tiresias(Module):
         # Perform softmax and return
         return self.softmax(out)
 
-    def predict(self, X, variable=False):
+    def predict(self, X, k=1, variable=False):
+        """Predict the k most likely output values
 
+            Parameters
+            ----------
+            X : torch.Tensor of shape=(n_samples, seq_len)
+                Input of sequences, these will be one-hot encoded to an array of
+                shape=(n_samples, seq_len, input_size)
+
+            k : int, default=1
+                Number of output items to generate
+
+            variable : boolean, default=False
+                If True, predict inputs of different sequence lengths
+
+            Returns
+            -------
+            result : torch.Tensor of shape=(n_samples, k)
+                k most likely outputs
+
+            confidence : torch.Tensor of shape=(n_samples, k)
+                Confidence levels for each output
+            """
+        # Get the predictions
         result = super().predict(X, variable=variable)
-        topv, topi = result.topk(1)
-        topi = topi.reshape(-1)
-        return topi
+        # Get the probabilities from the log probabilities
+        result = result.exp()
+        # Compute k most likely outputs
+        confidence, result = result.topk(k)
+        # Return result
+        return result, confidence
