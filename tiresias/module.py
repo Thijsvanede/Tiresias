@@ -78,7 +78,7 @@ class Module(nn.Module):
         # Set criterion
         criterion = criterion()
         # Initialise progress
-        self.progress.reset(len(X), epochs)
+        if verbose: self.progress.reset(len(X), epochs)
 
         ################################################################
         #                         Prepare data                         #
@@ -111,6 +111,9 @@ class Module(nn.Module):
             try:
                 # Loop over entire dataset
                 for X_, y_ in data:
+                    # Clear optimizer
+                    optimizer.zero_grad()
+
                     # Forward pass
                     # Get new input batch
                     X_ = X_.clone().detach().to(device)
@@ -120,8 +123,6 @@ class Module(nn.Module):
                     loss = criterion(y_pred, y_)
 
                     # Backward pass
-                    # Clear optimizer
-                    optimizer.zero_grad()
                     # Propagate loss
                     loss.backward()
                     # Perform optimizer step
@@ -174,7 +175,7 @@ class Module(nn.Module):
             result = list()
             indices = torch.arange(len(X))
             # Initialise progress
-            self.progress.reset(len(X), 1)
+            if verbose: self.progress.reset(len(X), 1)
 
             # If we expect variable input
             if variable:
