@@ -15,8 +15,7 @@ class PreprocessLoader(object):
         self.filter = Filter()
 
     def load(self, infile, dim_in, dim_out=1, max=float('inf'),
-        extract=['threat_name', 'operation', '_id', 'severity', 'confidence'],
-        train_ratio=0.5, random=False):
+        key=lambda x: x.get('src'), extract=[], train_ratio=0.5, random=False):
         """Load sequences from input file
 
             Parameters
@@ -33,7 +32,10 @@ class PreprocessLoader(object):
             max : float, default=inf
                 Maximum number of items to extract
 
-            extract : list
+            key : func, default=lambda x: x.get('src')
+                Group input by this input key, default is 'src'.
+
+            extract : list, default=list()
                 Fields to extract
 
             train_ratio : float, default=0.5
@@ -43,13 +45,14 @@ class PreprocessLoader(object):
                 Whether to split randomly
             """
         # Load data
-        data, encodings = self.load_sequences(infile, dim_in, dim_out, max, extract=extract)
+        data, encodings = self.load_sequences(infile, dim_in, dim_out, max,
+                                              key=key, extract=extract)
         # Split data
         data = self.split_train_test(data, train_ratio, random)
         # Split data on input and output
         for k, v in data.items():
             for k2, v2 in v.items():
-                if k == 'host':
+                if k == 'key':
                     data[k][k2] = {'X': v2, 'y': v2}
                 else:
                     data[k][k2] = {'X': v2[:, :-dim_out ],
@@ -59,7 +62,7 @@ class PreprocessLoader(object):
         return data, encodings
 
     def load_sequences(self, infile, dim_in, dim_out=1, max=float('inf'),
-        group = lambda x: (x.get('source'), x.get('src_ip')), extract=[]):
+        key = lambda x: x.get('src'), extract=[]):
         """Load sequences from input file
 
             Parameters
@@ -76,9 +79,8 @@ class PreprocessLoader(object):
             max : float, default=inf
                 Maximum number of items to extract
 
-            group : func, default=lambda x: (x.get('source'), x.get('src_ip'))
-                Group input by this input key, default is 'source' and 'src_ip'
-                tuple.
+            key : func, default=lambda x: x.get('src')
+                Group input by this input key, default is 'src'.
 
             extract : list, default=[]
                 Fields to extract
@@ -92,36 +94,32 @@ class PreprocessLoader(object):
                 Dictionary of key -> mapping
             """
         # Initialise encodings
-        encodings = {k: dict() for k in ['host', 'threat_name']}
+        encodings = {k: dict() for k in ['key'] + extract}
         # Initialise output
-        result = {k: list() for k in ['host'] + extract}
+        result = {k: list() for k in ['key'] + extract}
 
         # Read data
         data = self.loader.load(infile, max=max, decode=True)
 
         # Read sequences from data
-        for host, datapoint in self.filter.ngrams(data, dim_in+dim_out,
-            group = group,
+        for key, datapoint in self.filter.ngrams(data, dim_in+dim_out,
+            group = key,
             key   = lambda x: tuple(x.get(item) for item in extract)):
 
             # Unpack data
             datapoint = {k: v for k, v in zip(extract, zip(*datapoint))}
-            datapoint['host'] = host
+            datapoint['key'] = key
 
             # Store data
             for k, v in datapoint.items():
                 # Transform data if necessary
-                if k == 'threat_name':
+                if k in extract:
                     for x in v:
                         if x not in encodings[k]: encodings[k][x] = len(encodings[k])
                     v = [encodings[k][x] for x in v]
-                if k == 'host':
+                elif k == 'key':
                     if v not in encodings[k]: encodings[k][v] = len(encodings[k])
                     v = encodings[k][v]
-                if k == 'operation':
-                    v = [x == 'LOG' for x in v]
-                elif k in {'confidence', 'severity'}:
-                    v = [int(x) for x in v]
 
                 # Update datapoint
                 data_ = result.get(k, list())
@@ -129,8 +127,7 @@ class PreprocessLoader(object):
                 result[k] = data_
 
         # Get data as tensors
-        result = {k: np.asarray(v) if k == '_id' else
-                     torch.Tensor(v).to(torch.int64) for k, v in result.items()}
+        result = {k: torch.Tensor(v).to(torch.int64) for k, v in result.items()}
 
         # Return result
         return result, encodings

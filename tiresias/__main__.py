@@ -18,6 +18,7 @@ if __name__ == "__main__":
     # Add arguments
     group_input = parser.add_argument_group("Input parameters")
     group_input.add_argument('file', help='file to read as input')
+    group_input.add_argument('-f', '--field' , default='threat_name', help='FIELD to extract from input FILE')
     group_input.add_argument('-m', '--max'   , type=float, default=float('inf'), help='maximum number of items to read from input')
     group_input.add_argument('-l', '--length', type=int  , default=20          , help="length of input sequence")
 
@@ -51,8 +52,11 @@ if __name__ == "__main__":
     # Create loader for preprocessed data
     loader = PreprocessLoader()
     # Load data
-    data, encodings = loader.load(args.file, args.length, 1,
-                                  args.max, train_ratio=0.5, random=args.random)
+    data, encodings = loader.load(args.file, args.length, 1, args.max,
+                            train_ratio=0.5,
+                            key=lambda x: (x.get('source'), x.get('src_ip')),
+                            extract=[args.field],
+                            random=args.random)
 
     # Get short handles
     X_train = data.get('threat_name').get('train').get('X').to(device)
