@@ -43,7 +43,7 @@ class PreprocessLoader(object):
                 Whether to split randomly
             """
         # Load data
-        data, encodings = self.load_sequences(infile, dim_in, dim_out, max, extract)
+        data, encodings = self.load_sequences(infile, dim_in, dim_out, max, extract=extract)
         # Split data
         data = self.split_train_test(data, train_ratio, random)
         # Split data on input and output
