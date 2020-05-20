@@ -3,6 +3,7 @@ import itertools
 import json
 import numpy as np
 import torch
+import warnings
 from collections import deque
 
 class PreprocessLoader(object):
@@ -304,12 +305,16 @@ class Loader(object):
         encoding = {}
 
         # Read encoding file
-        with open("{}.encoding.json".format(infile)) as file:
-            # Read encoding as json
-            encoding = json.load(file)
-            # Transform
-            for k, v in encoding.items():
-                encoding[k] = {str(i): item for i, item in enumerate(v)}
+        if decode:
+            try:
+                with open("{}.encoding.json".format(infile)) as file:
+                    # Read encoding as json
+                    encoding = json.load(file)
+                    # Transform
+                    for k, v in encoding.items():
+                        encoding[k] = {str(i): item for i, item in enumerate(v)}
+            except FileNotFoundError as e:
+                warnings.warn("Could not decode: '{}'".format(e))
 
         # Read input file
         with open(infile) as infile:
