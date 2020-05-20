@@ -13,4 +13,3 @@ This is the reference documentation for the classes and methods objects provided
    progress
    tiresias
    variable_data_loader
-   utils

@@ -1,8 +1,8 @@
 import argparse
 import torch
+from argformat import StructuredFormatter
 from preprocessing import PreprocessLoader
 from tiresias import Tiresias
-from utils import TextHelpFormatter
 
 if __name__ == "__main__":
 ########################################################################
@@ -12,7 +12,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         prog        = "tiresias.py",
         description = "Tiresias: Predicting Security Events Through Deep Learning",
-        formatter_class=TextHelpFormatter
+        formatter_class=StructuredFormatter
     )
 
     # Add arguments
