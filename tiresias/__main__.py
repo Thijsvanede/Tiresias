@@ -27,6 +27,7 @@ if __name__ == "__main__":
     group_tiresias.add_argument(      '--hidden', type=int, default=128, help='hidden dimension')
     group_tiresias.add_argument('-i', '--input' , type=int, default=300, help='input  dimension')
     group_tiresias.add_argument('-k', '--k'     , type=int, default=4  , help='number of concurrent memory cells')
+    group_tiresias.add_argument('-o', '--online', action='store_true'  , help='use online training if given')
     group_tiresias.add_argument('-t', '--top'   , type=int, default=1  , help='accept any of the TOP predictions')
 
     # Training
@@ -72,7 +73,10 @@ if __name__ == "__main__":
     # Train tiresias
     tiresias.fit(X_train, y_train, epochs=args.epochs, batch_size=args.batch_size)
     # Predict using tiresias
-    y_pred, confidence = tiresias.predict_online(X_test, y_test, k=args.top)
+    if args.online:
+        y_pred, confidence = tiresias.predict_online(X_test, y_test, k=args.top)
+    else:
+        y_pred, confidence = tiresias.predict(X_test, k=args.top)
 
     ########################################################################
     #                           Show predictions                           #
