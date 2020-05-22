@@ -8,8 +8,5 @@ This is the reference documentation for the classes and methods objects provided
 .. toctree::
    :maxdepth: 2
 
-   module
    preprocessor
-   progress
    tiresias
-   variable_data_loader

@@ -3,10 +3,11 @@
 Tiresias
 ========
 
-The Tiresias class is an extension of the :ref:`Module` object.
+The Tiresias class uses the `torch-train`_ library for training and prediction.
 This class implements the neural network as described in the paper `Tiresias: Predicting Security Events Through Deep Learning`_.
 
 .. _`Tiresias: Predicting Security Events Through Deep Learning`: https://doi.org/10.1145/3243734.3243811
+.. _`torch-train`: https://github.com/Thijsvanede/torch-train
 
 
 .. autoclass:: tiresias.Tiresias
@@ -27,7 +28,7 @@ Predict
 ^^^^^^^
 
 The regular network gives a probability distribution over all possible output values.
-However, Tiresias outputs the `k` most likely outputs, therefore it overwrites the :py:meth:`predict` method of the :ref:`Module` class.
+However, Tiresias outputs the `k` most likely outputs, therefore it overwrites the :py:meth:`predict` method of the :py:class:`Module` class from `torch-train`_.
 
 .. automethod:: tiresias.Tiresias.predict
 

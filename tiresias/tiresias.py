@@ -2,7 +2,7 @@ from arrayLSTM            import      LSTM
 from arrayLSTM            import ArrayLSTM
 from arrayLSTM.extensions import  AttentionArrayLSTM
 from arrayLSTM.extensions import StochasticArrayLSTM
-from module import Module
+from torchtrain import Module
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
