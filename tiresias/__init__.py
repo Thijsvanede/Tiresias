@@ -1,0 +1,1 @@
+from .tiresias import Tiresias
