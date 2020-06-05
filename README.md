@@ -13,7 +13,7 @@ The docs are available from the `/docs` directory. Build them by executing
 ```
 make build
 ```
-from the `/docs` directory. The documentation can then be found under `/docs/build/html/index.html`.
+from the `/docs` directory. The documentation can then be found under `/docs/build/html/index.html`. **Important: to build the documentation yourself, you will also need to have `sphinx-rdt-theme` and `recommonmark` installed.**
 
 ## References
 [1] `TODO`
