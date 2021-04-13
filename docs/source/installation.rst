@@ -9,7 +9,7 @@ The most straigtforward way of installing Tiresias is via pip
 If you wish to stay up to date with the latest development version, you can instead download the `source code`_.
 In this case, make sure that you have all the required `dependencies`_ installed.
 
-.. _source code: https://github.com/Thijsvanede/Tiresias
+.. _source code: https://github.com/Anonymized/Tiresias
 
 .. _dependencies:
 
@@ -17,7 +17,7 @@ Dependencies
 ^^^^^^^^^^^^
 Tiresias requires the following python packages to be installed:
 
-- array-lstm: https://github.com/Thijsvanede/ArrayLSTM
+- array-lstm: https://github.com/Anonymized/ArrayLSTM
 - numpy: https://numpy.org/
 - scikit-learn: https://scikit-learn.org/
 - pytorch: https://pytorch.org/

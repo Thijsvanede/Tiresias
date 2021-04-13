@@ -18,8 +18,8 @@ sys.path.insert(0, os.path.abspath('../../tiresias'))
 # -- Project information -----------------------------------------------------
 
 project = 'Tiresias'
-copyright = '2020, Thijs van Ede'
-author = 'Thijs van Ede'
+copyright = '2021, Anonymized'
+author = 'Anonymized'
 
 # The full version, including alpha/beta/rc tags
 release = '0.0.1'

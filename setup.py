@@ -6,12 +6,12 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="tiresias",
     version="0.0.1",
-    author="Thijs van Ede",
-    author_email="t.s.vanede@utwente.nl",
+    author="Anonymized",
+    author_email="anonymized@anonymized.edu",
     description="Pytorch implementation of Tiresias: Predicting Security Events Through Deep Learning",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/Thijsvanede/Tiresias",
+    url="https://github.com/Anonymized/Tiresias",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
