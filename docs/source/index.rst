@@ -7,7 +7,7 @@ We ask people to cite both works when using the software for academic research p
 
 .. _`Tiresias: Predicting Security Events Through Deep Learning`: https://doi.org/10.1145/3243734.3243811
 
-.. _`DeepCASE: Semi-Supervised Contextual Analysis of Security Events`
+.. _`DeepCASE: Semi-Supervised Contextual Analysis of Security Events`: https://vm-thijs.ewi.utwente.nl/static/homepage/papers/deepcase.pdf
 
 .. toctree::
    :maxdepth: 2
