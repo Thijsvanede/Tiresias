@@ -17,6 +17,10 @@ Shen, Y., Mariconti, E., Vervier, P. A., & Stringhini, G. (2018). Tiresias: Pred
 
 Bibtex
 ^^^^^^
+
+DeepCASE
+~~~~~~~~
+
 .. code::
 
   @inproceedings{vanede2020deepcase,
@@ -27,6 +31,8 @@ Bibtex
     organization={IEEE}
   }
 
+Tiresias
+~~~~~~~~
 
 .. code::
 
