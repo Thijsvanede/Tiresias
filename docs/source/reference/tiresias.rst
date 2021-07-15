@@ -7,7 +7,7 @@ The Tiresias class uses the `torch-train`_ library for training and prediction.
 This class implements the neural network as described in the paper `Tiresias: Predicting Security Events Through Deep Learning`_.
 
 .. _`Tiresias: Predicting Security Events Through Deep Learning`: https://doi.org/10.1145/3243734.3243811
-.. _`torch-train`: https://github.com/Anonymized/torch-train
+.. _`torch-train`: https://github.com/Thijsvanede/torch-train
 
 
 .. autoclass:: tiresias.Tiresias
