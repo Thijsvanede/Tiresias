@@ -28,40 +28,56 @@ First we import the necessary torch modules and different LSTMs that we want to 
 
 .. code:: python
 
-  # import Tiresias and PreprocessLoader
-  from tiresias import Tiresias
-  from tiresias.processing import PreprocessLoader
+  # import Tiresias and Preprocessor
+  from tiresias              import Tiresias
+  from tiresias.preprocessor import Preprocessor
 
   ##############################################################################
   #                                 Load data                                  #
   ##############################################################################
-  # Create loader for preprocessed data
-  loader = PreprocessLoader()
-  # Load data
-  data, encodings = loader.load(
-      <infile>,
-      dim_in      = 20,
-      dim_out     = 1,
-      train_ratio = 0.5,
-      key         = lambda x: (x.get(<groupby_key>),),
-      extract     = [<event_key>],
-      random      = False
+
+  # Create preprocessor for loading data
+  preprocessor = Preprocessor(
+      length  = 20,           # Extract sequences of 20 items
+      timeout = float('inf'), # Do not include a maximum allowed time between events
   )
 
-  # Get short handles
-  X_train = data.get('threat_name').get('train').get('X').to(device)
-  y_train = data.get('threat_name').get('train').get('y').to(device).reshape(-1)
-  X_test  = data.get('threat_name').get('test' ).get('X').to(device)
-  y_test  = data.get('threat_name').get('test' ).get('y').to(device).reshape(-1)
+  # Load data from csv file
+  y, X, label, mapping = preprocessor.csv("<path/to/file.csv>")
+  # Load data from txt file
+  y, X, label, mapping = preprocessor.txt("<path/to/file.txt>")
 
   ##############################################################################
   #                                  Tiresias                                  #
   ##############################################################################
-  tiresias = Tiresias(args.input, args.hidden, args.input, args.k).to(device)
+
+  # Create Tiresias object
+  tiresias = Tiresias(
+      input_size  = 300, # Number of different events to expect
+      hidden_size = 128, # Hidden dimension, we suggest 128
+      output_size = 300, # Number of different events to expect
+      k           = 4,   # Number of parallel LSTMs for ArrayLSTM
+  )
+
+  # Optionally cast data and Tiresias to cuda, if available
+  tiresias = tiresias.to("cuda")
+  X        = X       .to("cuda")
+  y        = y       .to("cuda")
+
   # Train tiresias
-  tiresias.fit(X_train, y_train, epochs=args.epochs, batch_size=args.batch_size)
+  tiresias.fit(
+      X          = X,
+      y          = y,
+      epochs     = 10,
+      batch_size = 128,
+  )
+
   # Predict using tiresias
-  y_pred, confidence = tiresias.predict_online(X_test, y_test, k=args.top)
+  y_pred, confidence = tiresias.predict_online(
+      X = X,
+      y = y,
+      k = 3,
+  )
 
 Modifying Tiresias
 ^^^^^^^^^^^^^^^^^^
