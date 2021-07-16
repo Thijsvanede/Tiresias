@@ -1,8 +1,10 @@
 import argparse
 import torch
+import warnings
 from argformat import StructuredFormatter
-from preprocessing import PreprocessLoader
-from tiresias import Tiresias
+
+from .preprocessor  import Preprocessor
+from .tiresias import Tiresias
 
 if __name__ == "__main__":
 ########################################################################
@@ -15,12 +17,18 @@ if __name__ == "__main__":
         formatter_class=StructuredFormatter
     )
 
-    # Add arguments
+    # Add Tiresias mode arguments, run in different modes
+    parser.add_argument('mode', help="mode in which to run Tiresias", choices=(
+        'train',
+        'predict',
+    ))
+
+    # Add input arguments
     group_input = parser.add_argument_group("Input parameters")
-    group_input.add_argument('file', help='file to read as input')
-    group_input.add_argument('-f', '--field' , default='threat_name', help='FIELD to extract from input FILE')
-    group_input.add_argument('-l', '--length', type=int  , default=20          , help="length of input sequence")
-    group_input.add_argument('-m', '--max'   , type=float, default=float('inf'), help='maximum number of items to read from input')
+    group_input.add_argument('--csv'      , help="CSV events file to process")
+    group_input.add_argument('--txt'      , help="TXT events file to process")
+    group_input.add_argument('--length'   , type=int  , default=20          , help="sequence LENGTH           ")
+    group_input.add_argument('--timeout'  , type=float, default=float('inf'), help="sequence TIMEOUT (seconds)")
 
     # Tiresias
     group_tiresias = parser.add_argument_group("Tiresias parameters")
@@ -29,6 +37,8 @@ if __name__ == "__main__":
     group_tiresias.add_argument('-k', '--k'     , type=int, default=4  , help='number of concurrent memory cells')
     group_tiresias.add_argument('-o', '--online', action='store_true'  , help='use online training if given')
     group_tiresias.add_argument('-t', '--top'   , type=int, default=1  , help='accept any of the TOP predictions')
+    group_tiresias.add_argument('--save', help="save Tiresias to   specified file")
+    group_tiresias.add_argument('--load', help="load Tiresias from specified file")
 
     # Training
     group_training = parser.add_argument_group("Training parameters")
@@ -47,29 +57,27 @@ if __name__ == "__main__":
 
     # Set device
     if args.device is None or args.device == 'auto':
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    else:
-        device = args.device
+        args.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    # Create loader for preprocessed data
-    loader = PreprocessLoader()
-    # Load data
-    data, encodings = loader.load(
-        args.file,
-        args.length,
-        1,
-        args.max,
-        train_ratio = args.ratio,
-        key         = lambda x: (x.get('source'), x.get('src_ip')),
-        extract     = [args.field],
-        random      = args.random,
+    # Create preprocessor
+    preprocessor = Preprocessor(
+        length  = args.length,
+        timeout = args.timeout,
     )
 
-    # Get short handles
-    X_train = data.get(args.field).get('train').get('X').to(device)
-    y_train = data.get(args.field).get('train').get('y').to(device).reshape(-1)
-    X_test  = data.get(args.field).get('test' ).get('X').to(device)
-    y_test  = data.get(args.field).get('test' ).get('y').to(device).reshape(-1)
+    # Load files
+    if args.csv is not None and args.txt is not None:
+        # Raise an error if both csv and txt are specified
+        raise ValueError("Please specify EITHER --csv OR --txt.")
+    if args.csv:
+        # Load csv file
+        y, X, label, mapping = preprocessor.csv(args.csv)
+    elif args.txt:
+        # Load txt file
+        y, X, label, mapping = preprocessor.txt(args.txt)
+
+    X = X.to(args.device)
+    y = y.to(args.device)
 
     ########################################################################
     #                               Tiresias                               #
@@ -81,34 +89,51 @@ if __name__ == "__main__":
         hidden_size = args.hidden,
         output_size = args.input,
         k           = args.k,
-    ).to(device)
+    ).to(args.device)
 
-    # Train tiresias
-    tiresias.fit(
-        X          = X_train,
-        y          = y_train,
-        epochs     = args.epochs,
-        batch_size = args.batch_size,
-    )
+    # Load Tiresias from file, if necessary
+    if args.load:
+        tiresias = Tiresias.load(args.load).to(args.device)
 
-    # Predict using tiresias
-    if args.online:
-        y_pred, confidence = tiresias.predict_online(X_test, y_test, k=args.top)
-    else:
-        y_pred, confidence = tiresias.predict(X_test, k=args.top)
+    # Train Tiresias
+    if args.mode == "train":
 
-    ########################################################################
-    #                           Show predictions                           #
-    ########################################################################
-    # Initialise predictions
-    y_pred_top = y_pred[:, 0].clone()
-    # Compute top TOP predictions
-    for top in range(1, args.top):
-        print(top, y_pred.shape)
-        # Get mask
-        mask = y_test == y_pred[:, top]
-        # Set top values
-        y_pred_top[mask] = y_test[mask]
+        # Print warning if training Tiresias without saving it
+        if args.save is None:
+            warnings.warn("Training Tiresias without saving it to output.")
 
-    from sklearn.metrics import classification_report
-    print(classification_report(y_test.cpu(), y_pred_top.cpu(), digits=4))
+        # Fit Tiresias with data
+        tiresias.fit(
+            X          = X,
+            y          = y,
+            epochs     = args.epochs,
+            batch_size = args.batch_size,
+        )
+
+        # Save Tiresias to file
+        if args.save:
+            tiresias.save(args.save)
+
+    # Predict with Tiresias
+    if args.mode == "predict":
+        if args.online:
+            y_pred, confidence = tiresias.predict_online(X, y, k=args.top)
+        else:
+            y_pred, confidence = tiresias.predict(X, k=args.top)
+
+        ####################################################################
+        #                         Show predictions                         #
+        ####################################################################
+
+        # Initialise predictions
+        y_pred_top = y_pred[:, 0].clone()
+        # Compute top TOP predictions
+        for top in range(1, args.top):
+            print(top, y_pred.shape)
+            # Get mask
+            mask = y == y_pred[:, top]
+            # Set top values
+            y_pred_top[mask] = y[mask]
+
+        from sklearn.metrics import classification_report
+        print(classification_report(y.cpu(), y_pred_top.cpu(), digits=4))
