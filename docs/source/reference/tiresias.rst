@@ -24,6 +24,17 @@ As Tiresias is a Neural Network, it implements the :py:meth:`forward` method whi
 
 .. automethod:: tiresias.Tiresias.forward
 
+Fit
+^^^
+
+Tiresias inherits its fit method from the `torch-train`_ module. See the `documentation`_ for a complete reference.
+
+.. automethod:: tiresias.Tiresias.fit
+
+.. _`torch-train`: https://github.com/Thijsvanede/torch-train
+
+.. _`documentation`: https://torch-train.readthedocs.io/en/latest/reference/module.html#fit
+
 Predict
 ^^^^^^^
 
