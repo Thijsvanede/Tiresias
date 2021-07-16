@@ -54,11 +54,16 @@ if __name__ == "__main__":
     # Create loader for preprocessed data
     loader = PreprocessLoader()
     # Load data
-    data, encodings = loader.load(args.file, args.length, 1, args.max,
-                            train_ratio=args.ratio,
-                            key=lambda x: (x.get('source'), x.get('src_ip')),
-                            extract=[args.field],
-                            random=args.random)
+    data, encodings = loader.load(
+        args.file,
+        args.length,
+        1,
+        args.max,
+        train_ratio = args.ratio,
+        key         = lambda x: (x.get('source'), x.get('src_ip')),
+        extract     = [args.field],
+        random      = args.random,
+    )
 
     # Get short handles
     X_train = data.get(args.field).get('train').get('X').to(device)
@@ -69,9 +74,23 @@ if __name__ == "__main__":
     ########################################################################
     #                               Tiresias                               #
     ########################################################################
-    tiresias = Tiresias(args.input, args.hidden, args.input, args.k).to(device)
+
+    # Create instance of Tiresias
+    tiresias = Tiresias(
+        input_size  = args.input,
+        hidden_size = args.hidden,
+        output_size = args.input,
+        k           = args.k,
+    ).to(device)
+
     # Train tiresias
-    tiresias.fit(X_train, y_train, epochs=args.epochs, batch_size=args.batch_size)
+    tiresias.fit(
+        X          = X_train,
+        y          = y_train,
+        epochs     = args.epochs,
+        batch_size = args.batch_size,
+    )
+
     # Predict using tiresias
     if args.online:
         y_pred, confidence = tiresias.predict_online(X_test, y_test, k=args.top)
