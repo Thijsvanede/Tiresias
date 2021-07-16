@@ -35,7 +35,7 @@ if __name__ == "__main__":
     group_tiresias.add_argument(      '--hidden', type=int, default=128, help='hidden dimension')
     group_tiresias.add_argument('-i', '--input' , type=int, default=300, help='input  dimension')
     group_tiresias.add_argument('-k', '--k'     , type=int, default=4  , help='number of concurrent memory cells')
-    group_tiresias.add_argument('-o', '--online', action='store_true'  , help='use online training if given')
+    group_tiresias.add_argument('-o', '--online', action='store_true'  , help='use online training while predicting')
     group_tiresias.add_argument('-t', '--top'   , type=int, default=1  , help='accept any of the TOP predictions')
     group_tiresias.add_argument('--save', help="save Tiresias to   specified file")
     group_tiresias.add_argument('--load', help="load Tiresias from specified file")
@@ -45,8 +45,6 @@ if __name__ == "__main__":
     group_training.add_argument('-b', '--batch-size', type=int, default=128,   help="batch size")
     group_training.add_argument('-d', '--device'    , default='auto'     ,     help="train using given device (cpu|cuda|auto)")
     group_training.add_argument('-e', '--epochs'    , type=int, default=10,    help="number of epochs to train with")
-    group_training.add_argument('-r', '--random'    , action='store_true',     help="train with random selection")
-    group_training.add_argument(      '--ratio'     , type=float, default=0.5, help="proportion of data to use for training")
 
     # Parse arguments
     args = parser.parse_args()
