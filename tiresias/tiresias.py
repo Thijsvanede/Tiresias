@@ -231,3 +231,53 @@ class Tiresias(Module):
         confidence = torch.cat(confidence, dim=0)
         # Return result
         return result, confidence
+
+    ########################################################################
+    #                           Save/load model                            #
+    ########################################################################
+
+    def save(self, outfile):
+        """Save model to output file.
+
+            Parameters
+            ----------
+            outfile : string
+                File to output model.
+            """
+        # Save to output file
+        torch.save(self.state_dict(), outfile)
+
+    @classmethod
+    def load(cls, infile, device=None):
+        """Load model from input file.
+
+            Parameters
+            ----------
+            infile : string
+                File from which to load model.
+            """
+        # Load state dictionary
+        state_dict = torch.load(infile, map_location=device)
+
+        # Get input variables from state_dict
+        input_size  = state_dict.get('lstm.i2h.weight').shape[1]
+        hidden_size = state_dict.get('lstm.h2h.weight').shape[1]
+        output_size = input_size
+        k           = state_dict.get('lstm.i2h.weight').shape[0] // (4*hidden_size)
+
+        # Create ContextBuilder
+        result = cls(
+            input_size  = input_size,
+            hidden_size = hidden_size,
+            output_size = output_size,
+            k           = k,
+        )
+
+        # Cast to device if necessary
+        if device is not None: result = result.to(device)
+
+        # Set trained parameters
+        result.load_state_dict(state_dict)
+
+        # Return result
+        return result
