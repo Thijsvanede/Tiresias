@@ -135,7 +135,7 @@ class Tiresias(Module):
         epochs        = 10,
         batch_size    = 32,
         learning_rate = 0.0001,
-        criterion     = nn.NLLLoss,
+        criterion     = nn.NLLLoss(),
         optimizer     = optim.SGD,
         variable      = False,
         verbose       = True,
@@ -186,8 +186,6 @@ class Tiresias(Module):
         # Initialise output
         result     = list()
         confidence = list()
-        # Initialise progress
-        self.progress.reset(len(X), 1)
 
         # Loop over each batch
         for batch in range(0, len(X), batch_size):
@@ -217,14 +215,8 @@ class Tiresias(Module):
                     criterion     = criterion,
                     optimizer     = optimizer,
                     variable      = variable,
-                    verbose       = False,
+                    verbose       = verbose,
                     **kwargs)
-
-            # Update progress
-            if verbose: self.progress.update(0, X_.shape[0])
-
-        # Print finished prediction
-        if verbose: self.progress.update_epoch()
 
         # Concatenate outputs and return
         result     = torch.cat(result    , dim=0)
