@@ -56,4 +56,4 @@ html_theme = 'sphinx_rtd_theme'
 master_doc = 'index'
 
 # -- Mock modules ------------------------------------------------------------
-autodoc_mock_imports = ['torch', 'arrayLSTM']
+autodoc_mock_imports = ['numpy', 'pandas', 'torch', 'tqdm', 'arrayLSTM']
