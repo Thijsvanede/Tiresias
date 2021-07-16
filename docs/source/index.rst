@@ -16,5 +16,6 @@ We ask people to cite both works when using the software for academic research p
    installation
    usage/usage
    reference/reference
+   contributors
    license
    citing
