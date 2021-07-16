@@ -23,8 +23,7 @@ For example, the following code imports the Tiresias neural network as found in 
 Working example
 ^^^^^^^^^^^^^^^
 
-In this example, we import all different LSTM implementations and use it to predict the next item in a sequence.
-First we import the necessary torch modules and different LSTMs that we want to use.
+In this example, we load data from either a ``.csv`` or ``.txt`` file and use that data to train and predict with Tiresias.
 
 .. code:: python
 

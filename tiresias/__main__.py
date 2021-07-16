@@ -4,7 +4,7 @@ import warnings
 from argformat import StructuredFormatter
 
 from .preprocessor  import Preprocessor
-from .tiresias import Tiresias
+from .tiresias      import Tiresias
 
 if __name__ == "__main__":
 ########################################################################
