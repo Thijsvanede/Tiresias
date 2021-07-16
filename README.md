@@ -1,5 +1,5 @@
 # Tiresias: Predicting Security Events Through Deep Learning
-This code was implemented as part of the IEEE S&P [DeepCASE](https://vm-thijs.ewi.utwente.nl/static/homepage/papers/deepcase.pdf) [1] paper.
+This code was implemented as part of the IEEE S&P [DeepCASE: Semi-Supervised Contextual Analysis of Security Events](https://vm-thijs.ewi.utwente.nl/static/homepage/papers/deepcase.pdf) [1] paper.
 We provide a Pytorch implementation of [Tiresias: Predicting Security Events Through Deep Learning](https://doi.org/10.1145/3243734.3243811) (CCS'18).
 We ask people to [cite](#References) both works when using the software for academic research papers.
 
@@ -15,6 +15,8 @@ We provide an extensive documentation including installation instructions and re
 [2] `Shen, Y., Mariconti, E., Vervier, P. A., & Stringhini, G. (2018). Tiresias: Predicting security events through deep learning. In Proceedings of the 2018 ACM SIGSAC Conference on Computer and Communications Security (CCS) (pp. 592-605).`
 
 ### Bibtex
+
+#### DeepCASE
 ```
 @inproceedings{vanede2020deepcase,
   title={{DeepCASE: Semi-Supervised Contextual Analysis of Security Events}},
@@ -25,6 +27,7 @@ We provide an extensive documentation including installation instructions and re
 }
 ```
 
+#### Tiresias
 ```
 @inproceedings{shen2018tiresias,
   title={Tiresias: Predicting security events through deep learning},
