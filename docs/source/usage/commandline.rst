@@ -5,12 +5,6 @@ The :code:`__main__.py` file in the :code:`tiresias` module implements this comm
 The command line tool provides a quick and easy interface to predict sequences from :code:`.csv` files.
 The full command line usage is given in its :code:`help` page:
 
-.. Note::
-
-  Note that when handling very large inputs, Tiresias is very slow.
-  In order to more quickly test on smaller inputs we provide the ``--max`` flag, which specifies the maximum amount of samples to read from the input file.
-  E.g., to use only the first 100k samples, one may invoke Tiresias using ``--max 1e5`` flag.
-
 .. code:: text
 
   usage: tiresias.py [-h] [--csv CSV] [--txt TXT] [--length LENGTH] [--timeout TIMEOUT] [--hidden HIDDEN] [-i INPUT] [-k K] [-o] [-t TOP] [--save SAVE] [--load LOAD] [-b BATCH_SIZE] [-d DEVICE] [-e EPOCHS]
